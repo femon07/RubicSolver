@@ -1,4 +1,5 @@
 import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
 import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 import Cube from 'cubejs'
@@ -134,10 +135,11 @@ function RubiksCube() {
 
   return (
     <div>
-      <Canvas style={{ height: 400 }}>
+      <Canvas camera={{ position: [5, 5, 5] }} style={{ height: 400 }}>
         <ambientLight />
         <pointLight position={[10, 10, 10]} />
         <group ref={groupRef} />
+        <OrbitControls />
       </Canvas>
       <div style={{ marginTop: 10 }}>
         <button onClick={handleRandom}>ランダム</button>
