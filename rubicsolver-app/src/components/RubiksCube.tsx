@@ -4,13 +4,13 @@ import * as THREE from 'three'
 import Cube from 'cubejs'
 import { gsap } from 'gsap'
 
-// Data for each cubie
+// 各キューブの小さいブロックを管理する型
 interface Cubie {
   mesh: THREE.Mesh
   position: THREE.Vector3
 }
 
-// Utility to rotate a vector around axis
+// 指定軸を中心にベクトルを回転させるユーティリティ
 function rotateVector(v: THREE.Vector3, axis: 'x' | 'y' | 'z', angle: number) {
   const m = new THREE.Matrix4()
   if (axis === 'x') m.makeRotationX(angle)
@@ -20,6 +20,7 @@ function rotateVector(v: THREE.Vector3, axis: 'x' | 'y' | 'z', angle: number) {
 }
 
 
+// 各面の色設定
 const faceColors = {
   U: '#ffffff',
   D: '#ffff00',
@@ -29,6 +30,7 @@ const faceColors = {
   B: '#0000ff'
 }
 
+// 1つのキューブに貼るマテリアルを生成
 function createCubieMaterials() {
   const colors = [faceColors.R, faceColors.L, faceColors.U, faceColors.D, faceColors.F, faceColors.B]
   const materials = colors.map((color) => new THREE.MeshStandardMaterial({ color }))
@@ -41,7 +43,7 @@ function RubiksCube() {
   const cubeRef = useRef(new Cube())
   const [scramble, setScramble] = useState('')
 
-  // Initialize cubies
+  // キューブを初期化
   useEffect(() => {
     if (!groupRef.current) return
     const g = groupRef.current
@@ -61,6 +63,7 @@ function RubiksCube() {
     cubiesRef.current = cubies
   }, [])
 
+  // アルゴリズム文字列を順番に実行する
   const executeMoves = async (algorithm: string) => {
     const moves = algorithm.split(' ').filter(Boolean)
     for (const move of moves) {
@@ -68,6 +71,7 @@ function RubiksCube() {
     }
   }
 
+  // 1手の回転を実行してアニメーションする
   const applyMove = (move: string) => {
     return new Promise<void>((resolve) => {
       if (!groupRef.current) return resolve()
@@ -90,7 +94,7 @@ function RubiksCube() {
       const rotationGroup = new THREE.Group()
       selected.forEach((c) => rotationGroup.attach(c.mesh))
       groupRef.current!.add(rotationGroup)
-      const params: any = { x: 0, y: 0, z: 0 }
+      const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
       params[axis] = angle
       gsap.to(rotationGroup.rotation, {
         ...params,
@@ -110,6 +114,7 @@ function RubiksCube() {
     })
   }
 
+  // ランダムにスクランブルする
   const handleRandom = async () => {
     Cube.initSolver()
     const alg = Cube.scramble()
@@ -119,6 +124,7 @@ function RubiksCube() {
     cubeRef.current.move(alg)
   }
 
+  // 現在の状態を解く
   const handleSolve = async () => {
     Cube.initSolver()
     const solution = cubeRef.current.solve()
