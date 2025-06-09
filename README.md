@@ -31,3 +31,9 @@ npm run dev
 Build for production with `npm run build`.
 
 This project is licensed under the [MIT License](LICENSE).
+
+## GitHub Pages 自動デプロイ
+
+`main` ブランチへの push をトリガーに、GitHub Actions がビルドを行い
+GitHub Pages へ自動デプロイします。初回のみリポジトリ設定の
+"Pages" で公開ソースを "GitHub Actions" に変更してください。
