@@ -44,10 +44,14 @@ function RubiksCube() {
   const cubeRef = useRef(new Cube())
   const [scramble, setScramble] = useState('')
 
-  // キューブを初期化
-  useEffect(() => {
+  // キューブを初期化する共通処理
+  const initCube = () => {
     if (!groupRef.current) return
     const g = groupRef.current
+    // 既存の子要素を削除
+    while (g.children.length) {
+      g.remove(g.children[0])
+    }
     const cubies: Cubie[] = []
     for (let x = -1; x <= 1; x++) {
       for (let y = -1; y <= 1; y++) {
@@ -62,6 +66,11 @@ function RubiksCube() {
       }
     }
     cubiesRef.current = cubies
+  }
+
+  // 初回マウント時に初期化
+  useEffect(() => {
+    initCube()
   }, [])
 
   // アルゴリズム文字列を順番に実行する
@@ -125,6 +134,13 @@ function RubiksCube() {
     cubeRef.current.move(alg)
   }
 
+  // キューブを再描画する
+  const handleReset = () => {
+    cubeRef.current = new Cube()
+    setScramble('')
+    initCube()
+  }
+
   // 現在の状態を解く
   const handleSolve = async () => {
     Cube.initSolver()
@@ -142,7 +158,10 @@ function RubiksCube() {
         <OrbitControls />
       </Canvas>
       <div style={{ marginTop: 10 }}>
-        <button onClick={handleRandom}>ランダム</button>
+        <button onClick={handleReset}>再描画</button>
+        <button onClick={handleRandom} style={{ marginLeft: 8 }}>
+          ランダム
+        </button>
         <button onClick={handleSolve} style={{ marginLeft: 8 }}>
           そろえる
         </button>
