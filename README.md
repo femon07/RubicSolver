@@ -4,6 +4,7 @@ Three.js と React を用いて 3×3×3 のルービックキューブを操作�
 [デモはこちら](https://femon07.github.io/RubicSolver/) から利用できます。
 
 実装は `rubicsolver-app` ディレクトリにあります。次のコマンドで開発サーバーを起動できます。
+推奨 Node.js バージョンは **20 以上** です。
 
 ```bash
 cd rubicsolver-app
