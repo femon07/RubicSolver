@@ -25,6 +25,8 @@ jobs:
         working-directory: rubicsolver-app
       - run: npm run build
         working-directory: rubicsolver-app
+        env:
+          VITE_BASE_PATH: /RubicSolver/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: rubicsolver-app/dist
