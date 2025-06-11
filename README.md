@@ -15,6 +15,14 @@ npm run dev
 をベースとしたパスで出力されます。ローカルサーバーでも同じパスで公開するか、
 `vite.config.ts` の `base` オプションを変更して確認してください。
 
+Lint やビルドを実行する前には依存関係をインストールしておく必要があります。次の
+コマンドで Lint を実行できます。
+
+```bash
+npm ci
+npm run lint
+```
+
 このプロジェクトは [MIT License](LICENSE) の下で公開されています。
 
 ## GitHub Pages 自動デプロイ
