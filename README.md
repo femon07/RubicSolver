@@ -23,3 +23,14 @@ npm run dev
 GitHub Pages へ自動デプロイします。初回のみリポジトリ設定の
 "Pages" で公開ソースを "GitHub Actions" に変更してください。
 デプロイの進行状況は GitHub の "Actions" タブから確認でき、完了後数分でページが更新されます。
+
+## ビルドサイズの調査と分割
+
+`vite.config.ts` では `manualChunks` と `rollup-plugin-visualizer` を利用して
+依存ライブラリを個別のチャンクに分割しています。`npm run build` を実行すると
+`dist/stats.html` が生成され、各ライブラリのサイズを確認できます。
+
+調査の結果、`three` が約 740 kB、`react` 系が約 300 kB、`gsap` が約 70 kB と
+特に大きく、その他の依存は数十 kB 程度でした。`three` は描画処理の都合上
+置き換えが難しいためそのままとし、必要に応じて動的 `import()` を用いること
+で初期ロードを抑えています。
