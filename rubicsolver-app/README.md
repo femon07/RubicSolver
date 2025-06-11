@@ -1,4 +1,4 @@
-# RubicSolver アプリケーション
+# RubikSolver アプリケーション
 
 Vite と React で構築されたルービックキューブソルバーです。
 
@@ -15,6 +15,6 @@ npm run dev
 npm run build
 ```
 
-本番ビルドは `/RubicSolver/` を基点に生成されます。ローカル環境で確認する場合は
+本番ビルドは `/RubikSolver/` を基点に生成されます。ローカル環境で確認する場合は
 同じパスでサーバーを立てるか、`vite.config.ts` の `base` を変更して調整してくださ
 い。
