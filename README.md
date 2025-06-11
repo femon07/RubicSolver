@@ -4,6 +4,7 @@ Three.js と React を用いて 3×3×3 のルービックキューブを操作�
 [デモはこちら](https://femon07.github.io/RubicSolver/) から利用できます。
 
 実装は `rubicsolver-app` ディレクトリにあります。次のコマンドで開発サーバーを起動できます。
+推奨 Node.js バージョンは **20 以上** です。
 
 ```bash
 cd rubicsolver-app
@@ -11,9 +12,9 @@ npm ci
 npm run dev
 ```
 
-`npm run build` で本番用ビルドを作成します。ビルド後のファイルは `/RubicSolver/`
-をベースとしたパスで出力されます。ローカルサーバーでも同じパスで公開するか、
-`vite.config.ts` の `base` オプションを変更して確認してください。
+`npm run build` で本番用ビルドを作成します。
+出力時のベースパスは `VITE_BASE_PATH` 環境変数で指定できます。
+GitHub Pages へデプロイする場合は `/RubicSolver/` を設定してください。
 
 Lint やビルドを実行する前には依存関係をインストールしておく必要があります。次の
 コマンドで Lint を実行できます。

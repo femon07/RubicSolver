@@ -1,6 +1,7 @@
 # RubicSolver アプリケーション
 
 Vite と React で構築されたルービックキューブソルバーです。
+推奨 Node.js バージョンは **20 以上** です。
 
 ## 開発サーバー
 
@@ -30,3 +31,7 @@ npm run build
 npm ci
 npm run lint
 ```
+
+ビルド時は `VITE_BASE_PATH` 環境変数でベースパスを指定できます。
+GitHub Pages で公開する場合は `/RubicSolver/` を設定してください。
+
