@@ -16,6 +16,14 @@ npm run dev
 出力時のベースパスは `VITE_BASE_PATH` 環境変数で指定できます。
 GitHub Pages へデプロイする場合は `/RubicSolver/` を設定してください。
 
+Lint やビルドを実行する前には依存関係をインストールしておく必要があります。次の
+コマンドで Lint を実行できます。
+
+```bash
+npm ci
+npm run lint
+```
+
 このプロジェクトは [MIT License](LICENSE) の下で公開されています。
 
 ## GitHub Pages 自動デプロイ
