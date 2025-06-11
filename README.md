@@ -11,9 +11,9 @@ npm ci
 npm run dev
 ```
 
-`npm run build` で本番用ビルドを作成します。ビルド後のファイルは `/RubicSolver/`
-をベースとしたパスで出力されます。ローカルサーバーでも同じパスで公開するか、
-`vite.config.ts` の `base` オプションを変更して確認してください。
+`npm run build` で本番用ビルドを作成します。
+出力時のベースパスは `VITE_BASE_PATH` 環境変数で指定できます。
+GitHub Pages へデプロイする場合は `/RubicSolver/` を設定してください。
 
 このプロジェクトは [MIT License](LICENSE) の下で公開されています。
 
