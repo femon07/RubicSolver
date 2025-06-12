@@ -63,6 +63,7 @@ function RubiksCube() {
   const initialized = useRef(false)
   const [scramble, setScramble] = useState('')
   const [scrambleLength, setScrambleLength] = useState(20)
+  const [errorMessage, setErrorMessage] = useState('')
 
   // コンポーネント初回マウント時にソルバーを初期化
   useEffect(() => {
@@ -114,54 +115,66 @@ function RubiksCube() {
   // 1手の回転を実行してアニメーションする
   const applyMove = (move: string) => {
     return new Promise<void>((resolve) => {
-      if (!groupRef.current) return resolve()
-      const face = move[0] as 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
-      const modifier = move.length > 1 ? move[1] : ''
-      const axisMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; dir: 1 | -1 }> = {
-        U: { axis: 'y', layer: 1, dir: 1 },
-        D: { axis: 'y', layer: -1, dir: -1 },
-        R: { axis: 'x', layer: 1, dir: 1 },
-        L: { axis: 'x', layer: -1, dir: -1 },
-        F: { axis: 'z', layer: 1, dir: 1 },
-        B: { axis: 'z', layer: -1, dir: -1 }
-      }
-      const { axis, layer, dir } = axisMap[face]
-      let angle = (Math.PI / 2) * dir
-      if (modifier === "'") angle *= -1
-      if (modifier === '2') angle *= 2
-
-      const selected = cubiesRef.current.filter((c) => Math.round(c.position[axis]) === layer)
-      const rotationGroup = new THREE.Group()
-      rotationGroup.position[axis] = layer
-      groupRef.current!.add(rotationGroup)
-      selected.forEach((c) => rotationGroup.attach(c.mesh))
-      const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
-      params[axis] = angle
-      gsap.to(rotationGroup.rotation, {
-        ...params,
-        duration: 0.3,
-        onComplete: () => {
-          rotationGroup.updateMatrixWorld()
-          selected.forEach((c) => {
-            c.mesh.applyMatrix4(rotationGroup.matrix)
-            const v = rotateVector(c.position, axis, angle)
-            c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
-            groupRef.current!.attach(c.mesh)
-          })
-          groupRef.current!.remove(rotationGroup)
-          resolve()
+      try {
+        if (!groupRef.current) return resolve()
+        const face = move[0] as 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
+        const modifier = move.length > 1 ? move[1] : ''
+        const axisMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; dir: 1 | -1 }> = {
+          U: { axis: 'y', layer: 1, dir: 1 },
+          D: { axis: 'y', layer: -1, dir: -1 },
+          R: { axis: 'x', layer: 1, dir: 1 },
+          L: { axis: 'x', layer: -1, dir: -1 },
+          F: { axis: 'z', layer: 1, dir: 1 },
+          B: { axis: 'z', layer: -1, dir: -1 }
         }
-      })
+        const { axis, layer, dir } = axisMap[face]
+        let angle = (Math.PI / 2) * dir
+        if (modifier === "'") angle *= -1
+        if (modifier === '2') angle *= 2
+
+        const selected = cubiesRef.current.filter((c) => Math.round(c.position[axis]) === layer)
+        const rotationGroup = new THREE.Group()
+        rotationGroup.position[axis] = layer
+        groupRef.current!.add(rotationGroup)
+        selected.forEach((c) => rotationGroup.attach(c.mesh))
+        const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
+        params[axis] = angle
+        gsap.to(rotationGroup.rotation, {
+          ...params,
+          duration: 0.3,
+          onComplete: () => {
+            rotationGroup.updateMatrixWorld()
+            selected.forEach((c) => {
+              c.mesh.applyMatrix4(rotationGroup.matrix)
+              const v = rotateVector(c.position, axis, angle)
+              c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
+              groupRef.current!.attach(c.mesh)
+            })
+            groupRef.current!.remove(rotationGroup)
+            resolve()
+          }
+        })
+      } catch (err) {
+        console.error(err)
+        setErrorMessage('操作中にエラーが発生しました')
+        resolve()
+      }
     })
   }
 
   // ランダムにスクランブルする
   const handleRandom = async () => {
-    const alg = generateScramble(scrambleLength)
-    setScramble(alg)
-    cubeRef.current = new Cube()
-    await executeMoves(alg)
-    cubeRef.current.move(alg)
+    try {
+      const alg = generateScramble(scrambleLength)
+      setScramble(alg)
+      cubeRef.current = new Cube()
+      await executeMoves(alg)
+      cubeRef.current.move(alg)
+      setErrorMessage('')
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('スクランブル中にエラーが発生しました')
+    }
   }
 
   // キューブを再描画する
@@ -173,9 +186,15 @@ function RubiksCube() {
 
   // 現在の状態を解く
   const handleSolve = async () => {
-    const solution = cubeRef.current.solve()
-    await executeMoves(solution)
-    cubeRef.current.move(solution)
+    try {
+      const solution = cubeRef.current.solve()
+      await executeMoves(solution)
+      cubeRef.current.move(solution)
+      setErrorMessage('')
+    } catch (err) {
+      console.error(err)
+      setErrorMessage('解法実行中にエラーが発生しました')
+    }
   }
 
   return (
@@ -208,6 +227,9 @@ function RubiksCube() {
           そろえる
         </button>
         <div style={{ marginTop: 8 }}>スクランブル: {scramble}</div>
+        {errorMessage && (
+          <div style={{ marginTop: 8, color: 'red' }}>{errorMessage}</div>
+        )}
       </div>
     </div>
   )
