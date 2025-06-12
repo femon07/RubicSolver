@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { gsap } from 'gsap'
+import { COLORS } from '../constants/colors'
 
 interface Cubie {
   mesh: THREE.Mesh
@@ -21,12 +22,12 @@ export default class CubeRenderer {
 
   private createCubieMaterials() {
     const faceColors = {
-      U: '#ffffff',
-      D: '#ffff00',
-      L: '#ff8000',
-      R: '#ff0000',
-      F: '#00ff00',
-      B: '#0000ff'
+      U: COLORS.U,
+      D: COLORS.D,
+      L: COLORS.L,
+      R: COLORS.R,
+      F: COLORS.F,
+      B: COLORS.B
     }
     const colors = [faceColors.R, faceColors.L, faceColors.U, faceColors.D, faceColors.F, faceColors.B]
     return colors.map((color) => new THREE.MeshStandardMaterial({ color }))
@@ -101,6 +102,7 @@ export default class CubeRenderer {
             this.group!.attach(c.mesh)
           })
           this.group!.remove(rotationGroup)
+          rotationGroup.clear()
           resolve()
         }
       })
@@ -109,5 +111,25 @@ export default class CubeRenderer {
 
   reset() {
     this.initCube()
+  }
+
+  dispose() {
+    if (!this.group) return
+    this.group.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh
+        mesh.geometry.dispose()
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((m) => m.dispose())
+        } else {
+          ;(mesh.material as THREE.Material).dispose()
+        }
+      }
+    })
+    while (this.group.children.length) {
+      this.group.remove(this.group.children[0])
+    }
+    this.cubies = []
+    this.initialized = false
   }
 }

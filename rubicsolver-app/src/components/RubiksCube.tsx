@@ -34,6 +34,7 @@ function RubiksCube() {
       const alg = generateScramble(scrambleLength)
       setScramble(alg)
       controllerRef.current.reset()
+      rendererRef.current.dispose()
       rendererRef.current.reset()
       await executeMoves(alg)
       controllerRef.current.executeMoves(alg)
@@ -48,6 +49,7 @@ function RubiksCube() {
   const handleReset = () => {
     controllerRef.current.reset()
     setScramble('')
+    rendererRef.current.dispose()
     rendererRef.current.reset()
     setCubeState(controllerRef.current.getState())
   }
