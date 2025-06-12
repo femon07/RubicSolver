@@ -38,12 +38,31 @@ function createCubieMaterials() {
   return materials
 }
 
+// 指定した手数のスクランブルを生成する
+function generateScramble(length: number) {
+  const faces = ['U', 'D', 'L', 'R', 'F', 'B']
+  const modifiers = ['', "'", '2']
+  const alg: string[] = []
+  let prev = ''
+  for (let i = 0; i < length; i++) {
+    let face = faces[Math.floor(Math.random() * faces.length)]
+    while (face === prev) {
+      face = faces[Math.floor(Math.random() * faces.length)]
+    }
+    prev = face
+    const mod = modifiers[Math.floor(Math.random() * modifiers.length)]
+    alg.push(face + mod)
+  }
+  return alg.join(' ')
+}
+
 function RubiksCube() {
   const groupRef = useRef<THREE.Group>(null)
   const cubiesRef = useRef<Cubie[]>([])
   const cubeRef = useRef(new Cube())
   const initialized = useRef(false)
   const [scramble, setScramble] = useState('')
+  const [scrambleLength, setScrambleLength] = useState(20)
 
   // コンポーネント初回マウント時にソルバーを初期化
   useEffect(() => {
@@ -137,7 +156,7 @@ function RubiksCube() {
 
   // ランダムにスクランブルする
   const handleRandom = async () => {
-    const alg = Cube.scramble()
+    const alg = generateScramble(scrambleLength)
     setScramble(alg)
     cubeRef.current = new Cube()
     await executeMoves(alg)
@@ -168,6 +187,16 @@ function RubiksCube() {
       </Canvas>
       <div style={{ marginTop: 10 }}>
         <button onClick={handleReset}>再描画</button>
+        <label style={{ marginLeft: 8 }}>
+          手数:
+          <input
+            type="number"
+            min={1}
+            value={scrambleLength}
+            onChange={(e) => setScrambleLength(Number(e.target.value))}
+            style={{ width: 60, marginLeft: 4 }}
+          />
+        </label>
         <button onClick={handleRandom} style={{ marginLeft: 8 }}>
           ランダム
         </button>
