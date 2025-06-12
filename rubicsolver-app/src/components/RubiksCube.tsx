@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 import Cube from 'cubejs'
 import { gsap } from 'gsap'
@@ -44,6 +44,11 @@ function RubiksCube() {
   const cubeRef = useRef(new Cube())
   const initialized = useRef(false)
   const [scramble, setScramble] = useState('')
+
+  // コンポーネント初回マウント時にソルバーを初期化
+  useEffect(() => {
+    Cube.initSolver()
+  }, [])
 
   // キューブを初期化する共通処理
   const initCube = () => {
@@ -132,7 +137,6 @@ function RubiksCube() {
 
   // ランダムにスクランブルする
   const handleRandom = async () => {
-    Cube.initSolver()
     const alg = Cube.scramble()
     setScramble(alg)
     cubeRef.current = new Cube()
@@ -149,7 +153,6 @@ function RubiksCube() {
 
   // 現在の状態を解く
   const handleSolve = async () => {
-    Cube.initSolver()
     const solution = cubeRef.current.solve()
     await executeMoves(solution)
     cubeRef.current.move(solution)
