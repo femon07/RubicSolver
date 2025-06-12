@@ -2,6 +2,7 @@
 この README の英語版は [README.en.md](README.en.md) を参照してください。
 
 Three.js と React を用いて 3×3×3 のルービックキューブを操作できる Web アプリです。
+背景には `public/fractal.svg` を利用した淡いフラクタル模様を使用しています。
 [デモはこちら](https://femon07.github.io/RubicSolver/) から利用できます。
 
 ランダムボタンの横に手数を入力する欄があり、指定した回数だけランダムにスクランブルできます。
