@@ -160,7 +160,10 @@ function RubiksCube() {
 
   return (
     <div>
-      <Canvas camera={{ position: [5, 5, 5] }} style={{ height: 400, width: '100%' }}>
+      <Canvas
+        camera={{ position: [5, 5, 5], fov: 40 }}
+        style={{ height: 500, width: '100%' }}
+      >
         <ambientLight />
         <pointLight position={[10, 10, 10]} />
         <group ref={setGroupRef} />
