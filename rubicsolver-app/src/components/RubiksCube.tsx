@@ -1,6 +1,13 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { useRef, useState, useEffect, useCallback } from 'react'
+import {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle
+} from 'react'
 import * as THREE from 'three'
 import CubeController, { generateScramble } from '../lib/CubeController'
 import CubeRenderer from '../lib/CubeRenderer'
@@ -14,7 +21,13 @@ function SceneGrabber({ sceneRef }: { sceneRef: React.MutableRefObject<THREE.Sce
   return null
 }
 
-function RubiksCube() {
+function RubiksCube(
+  _props: unknown,
+  ref: React.Ref<{
+    getRendererState: () => string
+    getControllerState: () => string
+  }>
+) {
   const rendererRef = useRef(new CubeRenderer())
   const controllerRef = useRef(new CubeController())
   const sceneRef = useRef<THREE.Scene | null>(null)
@@ -27,6 +40,12 @@ function RubiksCube() {
   useEffect(() => {
     Cube.initSolver()
   }, [])
+
+  useImperativeHandle(ref, () => ({
+    getRendererState: () => rendererRef.current.getState(),
+    getControllerState: () => controllerRef.current.getState(),
+    initRenderer: () => rendererRef.current.setGroup(new THREE.Group())
+  }))
 
 
 
@@ -219,5 +238,5 @@ B: B面を右回転 / Shift+B: B面を左回転
   )
 }
 
-export default RubiksCube
+export default forwardRef(RubiksCube)
 export { generateScramble }

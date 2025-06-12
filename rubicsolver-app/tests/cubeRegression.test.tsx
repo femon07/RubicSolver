@@ -4,6 +4,12 @@ import RubiksCube from '../src/components/RubiksCube'
 import Cube from 'cubejs'
 
 jest.mock('gsap', () => ({
+  gsap: {
+    to: (_target: unknown, { onComplete }: { onComplete?: () => void }) => {
+      if (onComplete) onComplete()
+      return {}
+    }
+  },
   to: (_target: unknown, { onComplete }: { onComplete?: () => void }) => {
     if (onComplete) onComplete()
     return {}
