@@ -68,12 +68,12 @@ export default class CubeRenderer {
       const face = move[0] as 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
       const modifier = move.length > 1 ? move[1] : ''
       const axisMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; dir: 1 | -1 }> = {
-        U: { axis: 'y', layer: 1, dir: 1 },
-        D: { axis: 'y', layer: -1, dir: -1 },
-        R: { axis: 'x', layer: 1, dir: 1 },
-        L: { axis: 'x', layer: -1, dir: -1 },
-        F: { axis: 'z', layer: 1, dir: 1 },
-        B: { axis: 'z', layer: -1, dir: -1 }
+        U: { axis: 'y', layer: 1, dir: -1 },
+        D: { axis: 'y', layer: -1, dir: 1 },
+        R: { axis: 'x', layer: 1, dir: -1 },
+        L: { axis: 'x', layer: -1, dir: 1 },
+        F: { axis: 'z', layer: 1, dir: -1 },
+        B: { axis: 'z', layer: -1, dir: 1 }
       }
       const { axis, layer, dir } = axisMap[face]
       let angle = (Math.PI / 2) * dir
