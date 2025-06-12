@@ -113,8 +113,9 @@ function RubiksCube() {
 
       const selected = cubiesRef.current.filter((c) => Math.round(c.position[axis]) === layer)
       const rotationGroup = new THREE.Group()
-      selected.forEach((c) => rotationGroup.attach(c.mesh))
+      rotationGroup.position[axis] = layer
       groupRef.current!.add(rotationGroup)
+      selected.forEach((c) => rotationGroup.attach(c.mesh))
       const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
       params[axis] = angle
       gsap.to(rotationGroup.rotation, {
