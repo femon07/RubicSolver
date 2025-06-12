@@ -1,6 +1,7 @@
 # RubicSolver
 
 This web application lets you manipulate a 3×3×3 Rubik's cube using Three.js and React. You can try the [demo here](https://femon07.github.io/RubicSolver/).
+The background color automatically switches to dark mode based on the browser setting.
 
 The implementation resides in the `rubicsolver-app` directory. Run the following commands to start the development server. The recommended Node.js version is **20 or higher**.
 
