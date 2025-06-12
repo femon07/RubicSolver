@@ -115,15 +115,14 @@ export default class CubeRenderer {
 
   dispose() {
     if (!this.group) return
-    this.group.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh
+    this.group.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        const mesh = obj as THREE.Mesh
         mesh.geometry.dispose()
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach((m) => m.dispose())
-        } else {
-          ;(mesh.material as THREE.Material).dispose()
-        }
+        const mats = Array.isArray(mesh.material)
+          ? mesh.material
+          : [mesh.material]
+        mats.forEach((m) => m.dispose())
       }
     })
     while (this.group.children.length) {
