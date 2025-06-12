@@ -11,6 +11,7 @@ export default {
   moduleNameMapper: {
     '^~/(.*)$': '<rootDir>/src/$1',
   },
+  roots: ['<rootDir>', '../__tests__'],
   setupFiles: ['<rootDir>/tests/setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-dom'],
 };
