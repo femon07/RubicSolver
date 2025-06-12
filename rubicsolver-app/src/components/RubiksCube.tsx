@@ -148,6 +148,14 @@ function RubiksCube() {
               c.mesh.applyMatrix4(rotationGroup.matrix)
               const v = rotateVector(c.position, axis, angle)
               c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
+              c.mesh.position.set(c.position.x, c.position.y, c.position.z)
+              const snap = Math.PI / 2
+              const r = c.mesh.rotation
+              c.mesh.rotation.set(
+                Math.round(r.x / snap) * snap,
+                Math.round(r.y / snap) * snap,
+                Math.round(r.z / snap) * snap
+              )
               groupRef.current!.attach(c.mesh)
             })
             groupRef.current!.remove(rotationGroup)
