@@ -1,0 +1,21 @@
+name: Lint and Test
+
+on:
+  pull_request:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: rubicsolver-app/package-lock.json
+      - run: npm ci
+        working-directory: rubicsolver-app
+      - run: npm run lint
+        working-directory: rubicsolver-app
+      - run: npm test
+        working-directory: rubicsolver-app
