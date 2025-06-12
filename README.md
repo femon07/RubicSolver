@@ -1,4 +1,5 @@
 # RubicSolver
+この README の英語版は [README.en.md](README.en.md) を参照してください。
 
 Three.js と React を用いて 3×3×3 のルービックキューブを操作できる Web アプリです。  
 [デモはこちら](https://femon07.github.io/RubicSolver/) から利用できます。
