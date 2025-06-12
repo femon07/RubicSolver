@@ -70,8 +70,7 @@ function RubiksCube() {
 
   // 初回マウント時に初期化
   useEffect(() => {
-    const id = requestAnimationFrame(initCube)
-    return () => cancelAnimationFrame(id)
+    initCube()
   }, [])
 
   // アルゴリズム文字列を順番に実行する
