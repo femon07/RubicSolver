@@ -4,6 +4,7 @@ declare module 'cubejs' {
     move(alg: string): void
     randomize(): void
     solve(maxDepth?: number): string
+    isSolved(): boolean
     static random(): Cube
     static initSolver(): void
     static scramble(): string
