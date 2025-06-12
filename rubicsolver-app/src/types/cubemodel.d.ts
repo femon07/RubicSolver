@@ -2,7 +2,7 @@ export {}
 
 declare global {
   interface Window {
-    cubeModel: {
+    cubeModel?: {
       applyMoves: (moves: string[]) => Promise<void>
     }
   }
