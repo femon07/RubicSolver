@@ -64,6 +64,7 @@ function RubiksCube() {
   const [scramble, setScramble] = useState('')
   const [scrambleLength, setScrambleLength] = useState(20)
   const [errorMessage, setErrorMessage] = useState('')
+  const [cubeState, setCubeState] = useState(cubeRef.current.asString())
 
   // コンポーネント初回マウント時にソルバーを初期化
   useEffect(() => {
@@ -171,6 +172,7 @@ function RubiksCube() {
       cubeRef.current = new Cube()
       await executeMoves(alg)
       cubeRef.current.move(alg)
+      setCubeState(cubeRef.current.asString())
       setErrorMessage('')
     } catch (err) {
       console.error(err)
@@ -183,6 +185,7 @@ function RubiksCube() {
     cubeRef.current = new Cube()
     setScramble('')
     initCube()
+    setCubeState(cubeRef.current.asString())
   }
 
   // 現在の状態を解く
@@ -191,6 +194,7 @@ function RubiksCube() {
       const solution = cubeRef.current.solve()
       await executeMoves(solution)
       cubeRef.current.move(solution)
+      setCubeState(cubeRef.current.asString())
       setErrorMessage('')
     } catch (err) {
       console.error(err)
@@ -228,6 +232,9 @@ function RubiksCube() {
           そろえる
         </button>
         <div style={{ marginTop: 8 }}>スクランブル: {scramble}</div>
+        <div data-testid="cube-state" style={{ display: 'none' }}>
+          {cubeState}
+        </div>
         {errorMessage && (
           <div style={{ marginTop: 8, color: 'red' }}>{errorMessage}</div>
         )}
