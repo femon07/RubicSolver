@@ -21,6 +21,17 @@ npm run dev
 出力時のベースパスは `VITE_BASE_PATH` 環境変数で指定できます。
 GitHub Pages へデプロイする場合は `/RubicSolver/` を設定してください。
 
+## キーボードショートカット
+
+```
+U: U面を右回転 / Shift+U: U面を左回転
+R: R面を右回転 / Shift+R: R面を左回転
+F: F面を右回転 / Shift+F: F面を左回転
+D: D面を右回転 / Shift+D: D面を左回転
+L: L面を右回転 / Shift+L: L面を左回転
+B: B面を右回転 / Shift+B: B面を左回転
+```
+
 Lint やビルドを実行する前には依存関係をインストールしておく必要があります。次の
 コマンドで Lint を実行できます。
 
