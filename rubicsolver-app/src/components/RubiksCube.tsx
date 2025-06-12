@@ -137,6 +137,8 @@ function RubiksCube() {
         const rotationGroup = new THREE.Group()
         rotationGroup.position[axis] = layer
         groupRef.current!.add(rotationGroup)
+        groupRef.current!.updateMatrixWorld(true)
+        rotationGroup.updateMatrixWorld(true)
         selected.forEach((c) => rotationGroup.attach(c.mesh))
         const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
         params[axis] = angle
