@@ -1,6 +1,6 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
 import * as THREE from 'three'
 import CubeController, { generateScramble } from '../lib/CubeController'
 import CubeRenderer from '../lib/CubeRenderer'
@@ -28,6 +28,8 @@ function RubiksCube() {
     Cube.initSolver()
   }, [])
 
+
+
   const setGroupRef = (node: THREE.Group | null) => {
     groupRef.current = node
     rendererRef.current.setGroup(node)
@@ -39,6 +41,58 @@ function RubiksCube() {
       await rendererRef.current.applyMove(move)
     }
   }
+
+  const applyMove = useCallback(
+    async (move: string) => {
+      await rendererRef.current.applyMove(move)
+      controllerRef.current.applyMove(move)
+      setCubeState(controllerRef.current.getState())
+    },
+    []
+  )
+
+  const applyMoves = useCallback(
+    async (moves: string[]) => {
+      for (const m of moves) {
+        await applyMove(m)
+      }
+    },
+    [applyMove]
+  )
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key
+      const map: Record<string, string> = {
+        u: 'U',
+        U: "U'",
+        r: 'R',
+        R: "R'",
+        f: 'F',
+        F: "F'",
+        d: 'D',
+        D: "D'",
+        l: 'L',
+        L: "L'",
+        b: 'B',
+        B: "B'"
+      }
+      const move = map[key]
+      if (move) {
+        e.preventDefault()
+        applyMove(move)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    const w = window as Window & {
+      cubeModel?: { applyMoves: (moves: string[]) => Promise<void> }
+    }
+    w.cubeModel = { applyMoves }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      delete (w as { cubeModel?: unknown }).cubeModel
+    }
+  }, [applyMove, applyMoves])
 
   const handleRandom = async () => {
     try {
@@ -123,6 +177,38 @@ function RubiksCube() {
         <button onClick={handleSolve} style={{ marginLeft: 8 }}>
           そろえる
         </button>
+        <div style={{ marginTop: 8 }}>
+          {['U', 'D', 'L', 'R', 'F', 'B'].map((f) => (
+            <span key={f} style={{ marginRight: 4 }}>
+              <button
+                id={`rotate-${f}-counter`}
+                data-test={`rotate-${f}-counter`}
+                onClick={() => applyMove(`${f}'`)}
+              >
+                {f} ←
+              </button>
+              <button
+                id={`rotate-${f}-clockwise`}
+                data-test={`rotate-${f}-clockwise`}
+                onClick={() => applyMove(f)}
+                style={{ marginLeft: 2 }}
+              >
+                {f} →
+              </button>
+            </span>
+          ))}
+        </div>
+        <details style={{ marginTop: 8 }}>
+          <summary>ショートカット一覧</summary>
+          <pre style={{ textAlign: 'left' }}>
+U: U面を右回転 / Shift+U: U面を左回転
+R: R面を右回転 / Shift+R: R面を左回転
+F: F面を右回転 / Shift+F: F面を左回転
+D: D面を右回転 / Shift+D: D面を左回転
+L: L面を右回転 / Shift+L: L面を左回転
+B: B面を右回転 / Shift+B: B面を左回転
+          </pre>
+        </details>
         <div style={{ marginTop: 8 }}>スクランブル: {scramble}</div>
         <div data-testid="cube-state" style={{ display: 'none' }}>
           {cubeState}
