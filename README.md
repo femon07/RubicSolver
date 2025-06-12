@@ -40,3 +40,8 @@ GitHub Pages へ自動デプロイします。初回のみリポジトリ設定�
 
 `pull_request` 発生時に動作する GitHub Actions ワークフロー `Lint and Test` を追加しています。
 `npm run lint` と `npm test` が実行され、成功しないとマージできないようブランチ保護ルールで設定してください。
+
+## UI テスト
+
+GUI の挙動を自動的に検証するため、React Testing Library と Jest を利用したテストを
+追加しています。`rubicsolver-app` ディレクトリで `npm test` を実行すると、キューブの回転処理などを含む UI テストが実行されます。

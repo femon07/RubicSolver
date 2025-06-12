@@ -32,6 +32,10 @@ npm ci
 npm run lint
 ```
 
+## UI テスト
+
+React Testing Library と Jest を使った UI テストを用意しています。`npm test` を実行すると自動で実行されます。
+
 ビルド時は `VITE_BASE_PATH` 環境変数でベースパスを指定できます。
 GitHub Pages で公開する場合は `/RubicSolver/` を設定してください。
 
