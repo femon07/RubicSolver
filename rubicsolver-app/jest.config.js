@@ -2,10 +2,11 @@ export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.test.json',
-    },
+  transform: {
+    '^.+\\.[tj]sx?$': [
+      'ts-jest',
+      { tsconfig: 'tsconfig.test.json', useESM: true },
+    ],
   },
   moduleNameMapper: {
     '^~/(.*)$': '<rootDir>/src/$1',
