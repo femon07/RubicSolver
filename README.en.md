@@ -13,6 +13,17 @@ npm run dev
 
 Use `npm run build` to create a production build. The base path can be specified with the `VITE_BASE_PATH` environment variable. Set it to `/RubicSolver/` when deploying to GitHub Pages.
 
+## Keyboard Shortcuts
+
+```
+U: rotate the U face clockwise / Shift+U: rotate the U face counterclockwise
+R: rotate the R face clockwise / Shift+R: rotate the R face counterclockwise
+F: rotate the F face clockwise / Shift+F: rotate the F face counterclockwise
+D: rotate the D face clockwise / Shift+D: rotate the D face counterclockwise
+L: rotate the L face clockwise / Shift+L: rotate the L face counterclockwise
+B: rotate the B face clockwise / Shift+B: rotate the B face counterclockwise
+```
+
 Install dependencies before running lint or build tasks. Execute the following command to run lint.
 
 ```bash
