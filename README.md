@@ -40,3 +40,9 @@ GitHub Pages へ自動デプロイします。初回のみリポジトリ設定�
 
 `pull_request` 発生時に動作する GitHub Actions ワークフロー `Lint and Test` を追加しています。
 `npm run lint` と `npm test` が実行され、成功しないとマージできないようブランチ保護ルールで設定してください。
+
+## ブランチ命名規則
+
+開発用ブランチは `feature/<topic>` 形式で作成してください。
+`<topic>` にはタスク内容を表す英数字とハイフンのみを使用し、日本語は含めません。
+例: `feature/add-ci`, `feature/fix-bug-123`。
