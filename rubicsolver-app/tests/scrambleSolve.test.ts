@@ -1,4 +1,4 @@
-import { generateScramble } from '../src/components/RubiksCube';
+import { generateScramble } from '../src/lib/CubeController';
 import Cube from 'cubejs';
 
 // スクランブル生成のテスト
