@@ -5,6 +5,12 @@ import * as THREE from 'three'
 import Cube from 'cubejs'
 import { gsap } from 'gsap'
 
+declare global {
+  interface Window {
+    __cubies__?: Cubie[]
+  }
+}
+
 // 各キューブの小さいブロックを管理する型
 interface Cubie {
   mesh: THREE.Mesh
@@ -12,7 +18,11 @@ interface Cubie {
 }
 
 // 指定軸を中心にベクトルを回転させるユーティリティ
-function rotateVector(v: THREE.Vector3, axis: 'x' | 'y' | 'z', angle: number) {
+export function rotateVector(
+  v: THREE.Vector3,
+  axis: 'x' | 'y' | 'z',
+  angle: number,
+) {
   const m = new THREE.Matrix4()
   if (axis === 'x') m.makeRotationX(angle)
   if (axis === 'y') m.makeRotationY(angle)
@@ -91,6 +101,8 @@ function RubiksCube() {
       }
     }
     cubiesRef.current = cubies
+    // テスト用に現在のキューブ状態を参照できるよう公開する
+    ;(window as Window).__cubies__ = cubiesRef.current
   }
 
   // Canvas が準備できたタイミングで初期化を行う
@@ -145,9 +157,17 @@ function RubiksCube() {
           selected.forEach((c) => {
             c.mesh.applyMatrix4(rotationGroup.matrix)
             const v = rotateVector(c.position, axis, angle)
-            c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
+            c.position.set(
+              Math.round(v.x),
+              Math.round(v.y),
+              Math.round(v.z),
+            )
             groupRef.current!.attach(c.mesh)
+            // 次の回転で徐々にズレが生じないよう位置を整数座標に戻す
+            c.mesh.position.copy(c.position)
           })
+          // テスト用に外部からキューブ状態を参照できるよう更新
+          ;(window as Window).__cubies__ = cubiesRef.current
           groupRef.current!.remove(rotationGroup)
           resolve()
         }
