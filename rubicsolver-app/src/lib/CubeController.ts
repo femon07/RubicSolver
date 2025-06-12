@@ -1,4 +1,5 @@
 import Cube from 'cubejs'
+import { AXIS_GROUPS } from '../constants/axisGroups'
 
 export default class CubeController {
   cube: Cube
@@ -28,25 +29,17 @@ export default class CubeController {
   }
 
   static generateScramble(length: number) {
-    const faces = ['U', 'D', 'L', 'R', 'F', 'B']
+    const faces = ['U', 'D', 'L', 'R', 'F', 'B'] as const
     const modifiers = ['', "'", '2']
-    const axisMap: Record<string, string> = {
-      U: 'UD',
-      D: 'UD',
-      L: 'LR',
-      R: 'LR',
-      F: 'FB',
-      B: 'FB'
-    }
     const alg: string[] = []
     let prevAxis = ''
     let prevFace = ''
     for (let i = 0; i < length; i++) {
       let face = faces[Math.floor(Math.random() * faces.length)]
-      let axis = axisMap[face]
+      let axis = AXIS_GROUPS[face]
       while (face === prevFace || axis === prevAxis) {
         face = faces[Math.floor(Math.random() * faces.length)]
-        axis = axisMap[face]
+        axis = AXIS_GROUPS[face]
       }
       prevFace = face
       prevAxis = axis

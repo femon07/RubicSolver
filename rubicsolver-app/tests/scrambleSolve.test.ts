@@ -1,4 +1,5 @@
 import { generateScramble } from '../src/lib/CubeController';
+import { AXIS_GROUPS } from '../src/constants/axisGroups';
 import Cube from 'cubejs';
 
 // スクランブル生成のテスト
@@ -13,19 +14,11 @@ it('generateScramble が指定手数のスクランブルを生成する', () =>
 
 // 同じ軸が連続しないか確認
 it('generateScramble で連続して同じ軸を選ばない', () => {
-  const axisMap: Record<string, string> = {
-    U: 'UD',
-    D: 'UD',
-    L: 'LR',
-    R: 'LR',
-    F: 'FB',
-    B: 'FB'
-  };
   const alg = generateScramble(20);
   const moves = alg.split(' ').filter(Boolean);
   let prevAxis = '';
   for (const move of moves) {
-    const axis = axisMap[move[0]];
+    const axis = AXIS_GROUPS[move[0] as keyof typeof AXIS_GROUPS];
     if (prevAxis) {
       expect(axis).not.toBe(prevAxis);
     }
