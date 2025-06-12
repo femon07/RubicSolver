@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import * as THREE from 'three'
 import Cube from 'cubejs'
 import { gsap } from 'gsap'
@@ -42,6 +42,7 @@ function RubiksCube() {
   const groupRef = useRef<THREE.Group>(null)
   const cubiesRef = useRef<Cubie[]>([])
   const cubeRef = useRef(new Cube())
+  const initialized = useRef(false)
   const [scramble, setScramble] = useState('')
 
   // キューブを初期化する共通処理
@@ -68,10 +69,15 @@ function RubiksCube() {
     cubiesRef.current = cubies
   }
 
-  // 初回マウント時に初期化
-  useEffect(() => {
-    initCube()
-  }, [])
+  // Canvas が準備できたタイミングで初期化を行う
+  const setGroupRef = (node: THREE.Group | null) => {
+    groupRef.current = node
+    if (node && !initialized.current) {
+      initCube()
+      initialized.current = true
+    }
+  }
+
 
   // アルゴリズム文字列を順番に実行する
   const executeMoves = async (algorithm: string) => {
@@ -154,7 +160,7 @@ function RubiksCube() {
       <Canvas camera={{ position: [5, 5, 5] }} style={{ height: 400, width: '100%' }}>
         <ambientLight />
         <pointLight position={[10, 10, 10]} />
-        <group ref={groupRef} />
+        <group ref={setGroupRef} />
         <OrbitControls />
       </Canvas>
       <div style={{ marginTop: 10 }}>
