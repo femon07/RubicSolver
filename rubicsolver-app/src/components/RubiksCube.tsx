@@ -237,3 +237,4 @@ function RubiksCube() {
 }
 
 export default RubiksCube
+export { generateScramble }
