@@ -1,4 +1,4 @@
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
@@ -6,9 +6,19 @@ import CubeController, { generateScramble } from '../lib/CubeController'
 import CubeRenderer from '../lib/CubeRenderer'
 import Cube from 'cubejs'
 
+function SceneGrabber({ sceneRef }: { sceneRef: React.MutableRefObject<THREE.Scene | null> }) {
+  const { scene } = useThree()
+  useEffect(() => {
+    sceneRef.current = scene
+  }, [scene])
+  return null
+}
+
 function RubiksCube() {
   const rendererRef = useRef(new CubeRenderer())
   const controllerRef = useRef(new CubeController())
+  const sceneRef = useRef<THREE.Scene | null>(null)
+  const groupRef = useRef<THREE.Group | null>(null)
   const [scramble, setScramble] = useState('')
   const [scrambleLength, setScrambleLength] = useState(20)
   const [errorMessage, setErrorMessage] = useState('')
@@ -19,6 +29,7 @@ function RubiksCube() {
   }, [])
 
   const setGroupRef = (node: THREE.Group | null) => {
+    groupRef.current = node
     rendererRef.current.setGroup(node)
   }
 
@@ -34,8 +45,17 @@ function RubiksCube() {
       const alg = generateScramble(scrambleLength)
       setScramble(alg)
       controllerRef.current.reset()
-      rendererRef.current.dispose()
-      rendererRef.current.reset()
+      if (sceneRef.current && groupRef.current) {
+        sceneRef.current.remove(groupRef.current)
+        rendererRef.current.dispose()
+        const newGroup = new THREE.Group()
+        sceneRef.current.add(newGroup)
+        groupRef.current = newGroup
+        rendererRef.current.setGroup(newGroup)
+      } else {
+        rendererRef.current.dispose()
+        rendererRef.current.reset()
+      }
       await executeMoves(alg)
       controllerRef.current.executeMoves(alg)
       setCubeState(controllerRef.current.getState())
@@ -49,8 +69,17 @@ function RubiksCube() {
   const handleReset = () => {
     controllerRef.current.reset()
     setScramble('')
-    rendererRef.current.dispose()
-    rendererRef.current.reset()
+    if (sceneRef.current && groupRef.current) {
+      sceneRef.current.remove(groupRef.current)
+      rendererRef.current.dispose()
+      const newGroup = new THREE.Group()
+      sceneRef.current.add(newGroup)
+      groupRef.current = newGroup
+      rendererRef.current.setGroup(newGroup)
+    } else {
+      rendererRef.current.dispose()
+      rendererRef.current.reset()
+    }
     setCubeState(controllerRef.current.getState())
   }
 
@@ -70,6 +99,7 @@ function RubiksCube() {
   return (
     <div>
       <Canvas camera={{ position: [5, 5, 5], fov: 40 }} style={{ height: 500, width: '100%' }}>
+        <SceneGrabber sceneRef={sceneRef} />
         <ambientLight />
         <pointLight position={[10, 10, 10]} />
         <group ref={setGroupRef} />
