@@ -1,10 +1,13 @@
 import RubiksCube from './components/RubiksCube'
+import { useState } from 'react'
 import './App.css'
 
 function App() {
+  const [error, setError] = useState('')
   return (
     <div className="App">
-      <RubiksCube />
+      {error && <div className="error">{error}</div>}
+      <RubiksCube onError={setError} />
     </div>
   )
 }
