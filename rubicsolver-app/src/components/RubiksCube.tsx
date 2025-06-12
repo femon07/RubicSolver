@@ -11,6 +11,10 @@ interface Cubie {
   position: THREE.Vector3
 }
 
+interface Props {
+  onError?: (message: string) => void
+}
+
 // 指定軸を中心にベクトルを回転させるユーティリティ
 function rotateVector(v: THREE.Vector3, axis: 'x' | 'y' | 'z', angle: number) {
   const m = new THREE.Matrix4()
@@ -38,7 +42,8 @@ function createCubieMaterials() {
   return materials
 }
 
-function RubiksCube() {
+function RubiksCube({ onError }: Props) {
+  const handleError = onError ?? (() => {})
   const groupRef = useRef<THREE.Group>(null)
   const cubiesRef = useRef<Cubie[]>([])
   const cubeRef = useRef(new Cube())
@@ -83,61 +88,79 @@ function RubiksCube() {
   const executeMoves = async (algorithm: string) => {
     const moves = algorithm.split(' ').filter(Boolean)
     for (const move of moves) {
-      await applyMove(move)
+      try {
+        await applyMove(move)
+      } catch (e) {
+        console.error(e)
+        handleError('操作中にエラーが発生しました')
+        break
+      }
     }
   }
 
   // 1手の回転を実行してアニメーションする
   const applyMove = (move: string) => {
-    return new Promise<void>((resolve) => {
-      if (!groupRef.current) return resolve()
-      const face = move[0] as 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
-      const modifier = move.length > 1 ? move[1] : ''
-      const axisMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; dir: 1 | -1 }> = {
-        U: { axis: 'y', layer: 1, dir: 1 },
-        D: { axis: 'y', layer: -1, dir: -1 },
-        R: { axis: 'x', layer: 1, dir: 1 },
-        L: { axis: 'x', layer: -1, dir: -1 },
-        F: { axis: 'z', layer: 1, dir: 1 },
-        B: { axis: 'z', layer: -1, dir: -1 }
-      }
-      const { axis, layer, dir } = axisMap[face]
-      let angle = (Math.PI / 2) * dir
-      if (modifier === "'") angle *= -1
-      if (modifier === '2') angle *= 2
-
-      const selected = cubiesRef.current.filter((c) => Math.round(c.position[axis]) === layer)
-      const rotationGroup = new THREE.Group()
-      selected.forEach((c) => rotationGroup.attach(c.mesh))
-      groupRef.current!.add(rotationGroup)
-      const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
-      params[axis] = angle
-      gsap.to(rotationGroup.rotation, {
-        ...params,
-        duration: 0.3,
-        onComplete: () => {
-          rotationGroup.updateMatrixWorld()
-          selected.forEach((c) => {
-            c.mesh.applyMatrix4(rotationGroup.matrix)
-            const v = rotateVector(c.position, axis, angle)
-            c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
-            groupRef.current!.attach(c.mesh)
-          })
-          groupRef.current!.remove(rotationGroup)
-          resolve()
+    return new Promise<void>((resolve, reject) => {
+      try {
+        if (!groupRef.current) return resolve()
+        const face = move[0] as 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
+        const modifier = move.length > 1 ? move[1] : ''
+        const axisMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; dir: 1 | -1 }> = {
+          U: { axis: 'y', layer: 1, dir: 1 },
+          D: { axis: 'y', layer: -1, dir: -1 },
+          R: { axis: 'x', layer: 1, dir: 1 },
+          L: { axis: 'x', layer: -1, dir: -1 },
+          F: { axis: 'z', layer: 1, dir: 1 },
+          B: { axis: 'z', layer: -1, dir: -1 }
         }
-      })
+        const { axis, layer, dir } = axisMap[face]
+        let angle = (Math.PI / 2) * dir
+        if (modifier === "'") angle *= -1
+        if (modifier === '2') angle *= 2
+
+        const selected = cubiesRef.current.filter((c) => Math.round(c.position[axis]) === layer)
+        const rotationGroup = new THREE.Group()
+        selected.forEach((c) => rotationGroup.attach(c.mesh))
+        groupRef.current!.add(rotationGroup)
+        const params: Record<'x' | 'y' | 'z', number> = { x: 0, y: 0, z: 0 }
+        params[axis] = angle
+        gsap.to(rotationGroup.rotation, {
+          ...params,
+          duration: 0.3,
+          onComplete: () => {
+            rotationGroup.updateMatrixWorld()
+            selected.forEach((c) => {
+              c.mesh.applyMatrix4(rotationGroup.matrix)
+              const v = rotateVector(c.position, axis, angle)
+              c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
+              groupRef.current!.attach(c.mesh)
+            })
+            groupRef.current!.remove(rotationGroup)
+            resolve()
+          }
+        })
+      } catch (e) {
+        console.error(e)
+        handleError('アニメーション中にエラーが発生しました')
+        reject(e)
+      }
     })
   }
 
   // ランダムにスクランブルする
   const handleRandom = async () => {
-    Cube.initSolver()
-    const alg = Cube.scramble()
-    setScramble(alg)
-    cubeRef.current = new Cube()
-    await executeMoves(alg)
-    cubeRef.current.move(alg)
+    try {
+      Cube.initSolver()
+      const alg = Cube.scramble()
+      setScramble(alg)
+      cubeRef.current = new Cube()
+      await executeMoves(alg)
+      cubeRef.current.move(alg)
+      handleError('')
+    } catch (e) {
+      console.error(e)
+      handleError('スクランブル中にエラーが発生しました')
+    }
   }
 
   // キューブを再描画する
@@ -145,14 +168,21 @@ function RubiksCube() {
     cubeRef.current = new Cube()
     setScramble('')
     initCube()
+    handleError('')
   }
 
   // 現在の状態を解く
   const handleSolve = async () => {
-    Cube.initSolver()
-    const solution = cubeRef.current.solve()
-    await executeMoves(solution)
-    cubeRef.current.move(solution)
+    try {
+      Cube.initSolver()
+      const solution = cubeRef.current.solve()
+      await executeMoves(solution)
+      cubeRef.current.move(solution)
+      handleError('')
+    } catch (e) {
+      console.error(e)
+      handleError('解決中にエラーが発生しました')
+    }
   }
 
   return (
