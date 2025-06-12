@@ -32,3 +32,8 @@ npm run lint
 GitHub Pages へ自動デプロイします。初回のみリポジトリ設定の
 "Pages" で公開ソースを "GitHub Actions" に変更してください。
 デプロイの進行状況は GitHub の "Actions" タブから確認でき、完了後数分でページが更新されます。
+
+## Lint とテスト
+
+`pull_request` 発生時に動作する GitHub Actions ワークフロー `Lint and Test` を追加しています。
+`npm run lint` と `npm test` が実行され、成功しないとマージできないようブランチ保護ルールで設定してください。
