@@ -170,6 +170,7 @@ function RubiksCube() {
       const alg = generateScramble(scrambleLength)
       setScramble(alg)
       cubeRef.current = new Cube()
+      initCube()
       await executeMoves(alg)
       cubeRef.current.move(alg)
       setCubeState(cubeRef.current.asString())
