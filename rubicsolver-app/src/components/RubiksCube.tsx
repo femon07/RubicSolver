@@ -103,13 +103,10 @@ function RubiksCube(
       }
     }
     window.addEventListener('keydown', handleKeyDown)
-    const w = window as Window & {
-      cubeModel?: { applyMoves: (moves: string[]) => Promise<void> }
-    }
-    w.cubeModel = { applyMoves }
+    window.cubeModel = { applyMoves }
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
-      delete (w as { cubeModel?: unknown }).cubeModel
+      delete window.cubeModel
     }
   }, [applyMove, applyMoves])
 
