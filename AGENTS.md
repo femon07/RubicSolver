@@ -12,5 +12,7 @@
   npm run lint
   npm run test
   ```
-- Continuous integration checks run automatically when you open a PR. Ensure they pass.
+- Continuous integration checks run automatically when you open a PR. However,
+  branches prefixed with `codex/` skip the lint and test workflow because these
+  checks run before the PR is created. Ensure other branches pass CI.
 - The project typically merges PRs using **Create a merge commit**. Follow this strategy unless otherwise specified.
