@@ -42,3 +42,66 @@ test('モデルとレンダラーの状態が一致する', async () => {
 })
 
 
+
+test('R を適用すると cubie の座標と向きが正しい', async () => {
+  const renderer = new CubeRenderer()
+  const group = new THREE.Group()
+  renderer.setGroup(group)
+  const target = renderer.cubies.find(
+    (c) => c.position.x === 1 && c.position.y === 1 && c.position.z === 1
+  )!
+  await renderer.applyMove('R')
+  expect(target.position.x).toBe(1)
+  expect(target.position.y).toBe(1)
+  expect(target.position.z).toBe(-1)
+  expect(target.orientation).toEqual({
+    'x+': 'R',
+    'x-': null,
+    'y+': 'F',
+    'y-': null,
+    'z+': null,
+    'z-': 'U'
+  })
+})
+
+test('R2 を適用すると cubie の座標と向きが正しい', async () => {
+  const renderer = new CubeRenderer()
+  const group = new THREE.Group()
+  renderer.setGroup(group)
+  const target = renderer.cubies.find(
+    (c) => c.position.x === 1 && c.position.y === 1 && c.position.z === 1
+  )!
+  await renderer.applyMove('R2')
+  expect(target.position.x).toBe(1)
+  expect(target.position.y).toBe(-1)
+  expect(target.position.z).toBe(-1)
+  expect(target.orientation).toEqual({
+    'x+': 'R',
+    'x-': null,
+    'y+': null,
+    'y-': 'U',
+    'z+': null,
+    'z-': 'F'
+  })
+})
+
+test('F を適用すると cubie の座標と向きが正しい', async () => {
+  const renderer = new CubeRenderer()
+  const group = new THREE.Group()
+  renderer.setGroup(group)
+  const target = renderer.cubies.find(
+    (c) => c.position.x === 1 && c.position.y === 1 && c.position.z === 1
+  )!
+  await renderer.applyMove('F')
+  expect(target.position.x).toBe(1)
+  expect(target.position.y).toBe(-1)
+  expect(target.position.z).toBe(1)
+  expect(target.orientation).toEqual({
+    'x+': 'U',
+    'x-': null,
+    'y+': null,
+    'y-': 'R',
+    'z+': 'F',
+    'z-': null
+  })
+})
