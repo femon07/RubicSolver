@@ -51,7 +51,6 @@ test('R を適用すると cubie の座標と向きが正しい', async () => {
     (c) => c.position.x === 1 && c.position.y === 1 && c.position.z === 1
   )!
   await renderer.applyMove('R')
-  // デバッグ用に向きを出力する
   expect(target.position.x).toBe(1)
   expect(target.position.y).toBe(1)
   expect(target.position.z).toBe(-1)
