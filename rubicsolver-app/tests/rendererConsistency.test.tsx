@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import React from 'react'
-import RubiksCube from '../src/components/RubiksCube'
+import RubiksCube from '../src/components/RubiksCube2D'
 import Cube from 'cubejs'
 
 jest.mock('gsap', () => ({
@@ -22,10 +22,8 @@ test('回転後にビューとモデルの状態が一致する', async () => {
   const ref = React.createRef<{
     getRendererState: () => string
     getControllerState: () => string
-    initRenderer: () => void
   }>()
   render(<RubiksCube ref={ref} />)
-  ref.current?.initRenderer()
   fireEvent.click(screen.getByText('U →'))
   await waitFor(() => {
     expect(ref.current?.getRendererState()).toBe(

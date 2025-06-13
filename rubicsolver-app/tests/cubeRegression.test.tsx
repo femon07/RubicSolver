@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import RubiksCube from '../src/components/RubiksCube'
+import RubiksCube from '../src/components/RubiksCube2D'
 import Cube from 'cubejs'
 
 jest.mock('gsap', () => ({
