@@ -1,4 +1,4 @@
-import RubiksCube from './components/RubiksCube'
+import RubiksCube from './components/RubiksCube2D'
 import './App.css'
 
 function App() {
