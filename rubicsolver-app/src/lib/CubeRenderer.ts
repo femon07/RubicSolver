@@ -86,12 +86,31 @@ export default class CubeRenderer {
     this.cubies = cubies
   }
 
-  private rotateVector(v: THREE.Vector3, axis: 'x' | 'y' | 'z', angle: number) {
+  private rotateVector(
+    v: THREE.Vector3,
+    axis: 'x' | 'y' | 'z',
+    angle: number,
+    offset = 0
+  ) {
     const m = new THREE.Matrix4()
-    if (axis === 'x') m.makeRotationX(angle)
-    if (axis === 'y') m.makeRotationY(angle)
-    if (axis === 'z') m.makeRotationZ(angle)
-    return v.clone().applyMatrix4(m)
+    const t = new THREE.Matrix4()
+    const tInv = new THREE.Matrix4()
+    if (axis === 'x') {
+      m.makeRotationX(angle)
+      t.makeTranslation(-offset, 0, 0)
+      tInv.makeTranslation(offset, 0, 0)
+    }
+    if (axis === 'y') {
+      m.makeRotationY(angle)
+      t.makeTranslation(0, -offset, 0)
+      tInv.makeTranslation(0, offset, 0)
+    }
+    if (axis === 'z') {
+      m.makeRotationZ(angle)
+      t.makeTranslation(0, 0, -offset)
+      tInv.makeTranslation(0, 0, offset)
+    }
+    return v.clone().applyMatrix4(t).applyMatrix4(m).applyMatrix4(tInv)
   }
 
   private rotateOrientation(cubie: Cubie, axis: 'x' | 'y' | 'z', angle: number) {
@@ -160,7 +179,7 @@ export default class CubeRenderer {
             rotationGroup.updateMatrixWorld()
             selected.forEach((c) => {
               c.mesh.applyMatrix4(rotationGroup.matrix)
-              const v = this.rotateVector(c.position, axis, angle)
+              const v = this.rotateVector(c.position, axis, angle, layer)
               c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
               c.mesh.position.set(c.position.x, c.position.y, c.position.z)
               this.rotateOrientation(c, axis, angle)
@@ -174,7 +193,7 @@ export default class CubeRenderer {
         })
       } else {
         selected.forEach((c) => {
-          const v = this.rotateVector(c.position, axis, angle)
+          const v = this.rotateVector(c.position, axis, angle, layer)
           c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
           this.rotateOrientation(c, axis, angle)
         })
