@@ -105,3 +105,38 @@ test('F を適用すると cubie の座標と向きが正しい', async () => {
     'z-': null
   })
 })
+
+test('回転後にキュービーの色が向きと一致する', async () => {
+  const renderer = new CubeRenderer()
+  const group = new THREE.Group()
+  renderer.setGroup(group)
+  const target = renderer.cubies.find(
+    (c) => c.position.x === 1 && c.position.y === 1 && c.position.z === 1
+  )!
+  await renderer.applyMove('R')
+  const mats = target.mesh.material as any
+  const map: Record<string, number> = {
+    U: COLORS.U,
+    D: COLORS.D,
+    L: COLORS.L,
+    R: COLORS.R,
+    F: COLORS.F,
+    B: COLORS.B
+  }
+  const order: Array<keyof typeof target.orientation> = [
+    'x+',
+    'x-',
+    'y+',
+    'y-',
+    'z+',
+    'z-'
+  ]
+  order.forEach((dir, idx) => {
+    const face = target.orientation[dir]
+    if (face) {
+      expect(mats[idx].color.getHex()).toBe(map[face])
+    } else {
+      expect(mats[idx].color.getHex()).toBe(0x000000)
+    }
+  })
+})

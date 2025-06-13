@@ -18,6 +18,15 @@ interface Cubie {
   orientation: Orientation
 }
 
+const ORI_TO_COLOR: Record<string, number> = {
+  U: COLORS.U,
+  D: COLORS.D,
+  L: COLORS.L,
+  R: COLORS.R,
+  F: COLORS.F,
+  B: COLORS.B
+}
+
 export default class CubeRenderer {
   group: THREE.Group | null = null
   cubies: Cubie[] = []
@@ -86,6 +95,18 @@ export default class CubeRenderer {
     this.cubies = cubies
   }
 
+  private updateCubieColors(cubie: Cubie) {
+    const materials = cubie.mesh.material as THREE.MeshStandardMaterial[]
+    const order: Array<keyof Orientation> = ['x+', 'x-', 'y+', 'y-', 'z+', 'z-']
+    order.forEach((dir, idx) => {
+      const face = cubie.orientation[dir]
+      if (face) {
+        materials[idx].color.set(ORI_TO_COLOR[face])
+      } else {
+        materials[idx].color.set(0x000000)
+      }
+    })
+  }
   private rotateVector(
     v: THREE.Vector3,
     axis: 'x' | 'y' | 'z',
@@ -183,6 +204,7 @@ export default class CubeRenderer {
               c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
               c.mesh.position.set(c.position.x, c.position.y, c.position.z)
               this.rotateOrientation(c, axis, angle)
+              this.updateCubieColors(c)
               this.group!.attach(c.mesh)
             })
             this.cubeModel.move(move)
@@ -196,6 +218,7 @@ export default class CubeRenderer {
           const v = this.rotateVector(c.position, axis, angle, layer)
           c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
           this.rotateOrientation(c, axis, angle)
+          this.updateCubieColors(c)
         })
         this.cubeModel.move(move)
         resolve()
