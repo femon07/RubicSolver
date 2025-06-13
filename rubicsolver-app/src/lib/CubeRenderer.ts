@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { gsap } from 'gsap'
 import Cube from 'cubejs'
 import { COLORS } from '../constants/colors'
+import ICubeRenderer from './ICubeRenderer'
 
 interface Orientation {
   'x+': string | null
@@ -27,7 +28,7 @@ const ORI_TO_COLOR: Record<string, number> = {
   B: COLORS.B
 }
 
-export default class CubeRenderer {
+export default class CubeRenderer implements ICubeRenderer {
   group: THREE.Group | null = null
   cubies: Cubie[] = []
   initialized = false
