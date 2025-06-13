@@ -1,4 +1,4 @@
-import ICubeRenderer from './ICubeRenderer'
+import type ICubeRenderer from './ICubeRenderer'
 import Cube from 'cubejs'
 
 export default class CubeRenderer2D implements ICubeRenderer {

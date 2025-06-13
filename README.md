@@ -33,12 +33,14 @@ L: L面を右回転 / Shift+L: L面を左回転
 B: B面を右回転 / Shift+B: B面を左回転
 ```
 
-Lint やビルドを実行する前には依存関係をインストールしておく必要があります。次の
-コマンドで Lint を実行できます。
+Lint・テスト・ビルドを実行する前には依存関係をインストールしておく必要があります。次の
+コマンドで一連のチェックを実行できます。
 
 ```bash
 npm ci
 npm run lint
+npm run test
+npm run build
 ```
 
 このプロジェクトは [MIT License](LICENSE) の下で公開されています。
@@ -50,10 +52,10 @@ GitHub Pages へ自動デプロイします。初回のみリポジトリ設定�
 "Pages" で公開ソースを "GitHub Actions" に変更してください。
 デプロイの進行状況は GitHub の "Actions" タブから確認でき、完了後数分でページが更新されます。
 
-## Lint とテスト
+## Lint・テスト・ビルド
 
-`pull_request` 発生時に動作する GitHub Actions ワークフロー `Lint and Test` を追加しています。
-`npm run lint` と `npm test` が実行され、成功しないとマージできないようブランチ保護ルールで設定してください。
+`pull_request` 発生時に動作する GitHub Actions ワークフロー `Lint, Test and Build` を追加しています。
+`npm run lint`、`npm test`、`npm run build` が実行され、成功しないとマージできないようブランチ保護ルールで設定してください。
 
 ## ブランチ命名規則
 
