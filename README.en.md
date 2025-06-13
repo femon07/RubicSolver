@@ -24,11 +24,13 @@ L: rotate the L face clockwise / Shift+L: rotate the L face counterclockwise
 B: rotate the B face clockwise / Shift+B: rotate the B face counterclockwise
 ```
 
-Install dependencies before running lint or build tasks. Execute the following command to run lint.
+Install dependencies before running lint, tests, and build tasks. Execute the following commands to perform these checks.
 
 ```bash
 npm ci
 npm run lint
+npm run test
+npm run build
 ```
 
 This project is released under the [MIT License](LICENSE).
@@ -36,3 +38,7 @@ This project is released under the [MIT License](LICENSE).
 ## GitHub Pages Automatic Deployment
 
 A push to the `main` branch triggers GitHub Actions to build and automatically deploy to GitHub Pages. On first setup, change the repository's "Pages" source to "GitHub Actions". The deployment status can be checked on the "Actions" tab on GitHub, and the page will update a few minutes after completion.
+
+## Lint, Test and Build
+
+The `Lint, Test and Build` GitHub Actions workflow runs on every `pull_request`. It executes `npm run lint`, `npm test`, and `npm run build`. Configure branch protection rules so that merges are blocked until this workflow succeeds.

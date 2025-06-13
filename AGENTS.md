@@ -11,6 +11,7 @@
   npm ci
   npm run lint
   npm run test
+  npm run build
   ```
 - Continuous integration checks run automatically when you open a PR. However,
   branches prefixed with `codex/` skip the lint and test workflow because these

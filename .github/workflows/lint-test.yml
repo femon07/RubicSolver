@@ -1,4 +1,4 @@
-name: Lint and Test
+name: Lint, Test and Build
 
 on:
   pull_request:
@@ -19,4 +19,6 @@ jobs:
       - run: npm run lint
         working-directory: rubicsolver-app
       - run: npm test
+        working-directory: rubicsolver-app
+      - run: npm run build
         working-directory: rubicsolver-app

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { gsap } from 'gsap'
 import Cube from 'cubejs'
 import { COLORS } from '../constants/colors'
-import ICubeRenderer from './ICubeRenderer'
+import type ICubeRenderer from './ICubeRenderer'
 
 interface Orientation {
   'x+': string | null
