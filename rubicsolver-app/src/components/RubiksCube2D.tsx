@@ -19,6 +19,8 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const [cubeState, setCubeState] = useState(controllerRef.current.getState())
   const [solutionSteps, setSolutionSteps] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(-1)
+  const busyRef = useRef(false)
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     Cube.initSolver()
@@ -35,64 +37,87 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
     interval = 0
   ) => executeMoves(rendererRef.current, algorithm, interval)
 
-  const applyMove = useCallback(async (move: string) => {
+  const runExclusive = useCallback(async (fn: () => Promise<void> | void) => {
+    if (busyRef.current) return
+    busyRef.current = true
+    setBusy(true)
+    try {
+      await fn()
+    } finally {
+      busyRef.current = false
+      setBusy(false)
+    }
+  }, [])
+
+  const applyMoveDirect = useCallback(async (move: string) => {
     await rendererRef.current.applyMove(move)
     controllerRef.current.applyMove(move)
     setCubeState(controllerRef.current.getState())
   }, [])
 
+  const applyMove = useCallback(
+    async (move: string) => runExclusive(() => applyMoveDirect(move)),
+    [runExclusive, applyMoveDirect]
+  )
+
   const handleRandom = async () => {
-    try {
-      const alg = generateScramble(scrambleLength)
-      setScramble(alg)
-      await exec(alg)
-      controllerRef.current.executeMoves(alg)
-      setCubeState(controllerRef.current.getState())
-      setErrorMessage('')
-      setSolutionSteps([])
-      setCurrentStep(-1)
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('スクランブル中にエラーが発生しました')
-    }
+    await runExclusive(async () => {
+      try {
+        const alg = generateScramble(scrambleLength)
+        setScramble(alg)
+        await exec(alg)
+        controllerRef.current.executeMoves(alg)
+        setCubeState(controllerRef.current.getState())
+        setErrorMessage('')
+        setSolutionSteps([])
+        setCurrentStep(-1)
+      } catch (err) {
+        console.error(err)
+        setErrorMessage('スクランブル中にエラーが発生しました')
+      }
+    })
   }
 
   const handleReset = () => {
-    controllerRef.current.reset()
-    rendererRef.current.reset()
-    setScramble('')
-    setCubeState(controllerRef.current.getState())
-    setSolutionSteps([])
-    setCurrentStep(-1)
+    runExclusive(() => {
+      controllerRef.current.reset()
+      rendererRef.current.reset()
+      setScramble('')
+      setCubeState(controllerRef.current.getState())
+      setSolutionSteps([])
+      setCurrentStep(-1)
+    })
   }
 
   const handleSolve = async () => {
-    try {
-      const solution = controllerRef.current.solve()
-      const moves = solution.split(' ').filter(Boolean)
-      setSolutionSteps(moves)
-      for (let i = 0; i < moves.length; i++) {
-        setCurrentStep(i)
-        await applyMove(moves[i])
-        if (process.env.NODE_ENV !== 'test') {
-          await wait(300)
+    await runExclusive(async () => {
+      try {
+        const solution = controllerRef.current.solve()
+        const moves = solution.split(' ').filter(Boolean)
+        setSolutionSteps(moves)
+        for (let i = 0; i < moves.length; i++) {
+          setCurrentStep(i)
+          await applyMoveDirect(moves[i])
+          if (process.env.NODE_ENV !== 'test') {
+            await wait(300)
+          }
         }
+        setCurrentStep(-1)
+        setSolutionSteps([])
+        setCubeState(controllerRef.current.getState())
+        setErrorMessage('')
+      } catch (err) {
+        console.error(err)
+        setErrorMessage('解法実行中にエラーが発生しました')
       }
-      setCurrentStep(-1)
-      setSolutionSteps([])
-      setCubeState(controllerRef.current.getState())
-      setErrorMessage('')
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('解法実行中にエラーが発生しました')
-    }
+    })
   }
 
   return (
     <div>
       <canvas ref={canvasRef} width={360} height={270} />
       <div style={{ marginTop: 10 }}>
-        <button onClick={handleReset}>再描画</button>
+        <button onClick={handleReset} disabled={busy}>再描画</button>
         <label style={{ marginLeft: 8 }}>
           手数:
           <input
@@ -103,10 +128,10 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
             style={{ width: 60, marginLeft: 4 }}
           />
         </label>
-        <button onClick={handleRandom} style={{ marginLeft: 8 }}>
+        <button onClick={handleRandom} style={{ marginLeft: 8 }} disabled={busy}>
           ランダム
         </button>
-        <button onClick={handleSolve} style={{ marginLeft: 8 }}>
+        <button onClick={handleSolve} style={{ marginLeft: 8 }} disabled={busy}>
           そろえる
         </button>
         <div style={{ marginTop: 8 }}>
@@ -116,6 +141,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
                 id={`rotate-${f}-counter`}
                 data-test={`rotate-${f}-counter`}
                 onClick={() => applyMove(`${f}'`)}
+                disabled={busy}
               >
                 {f} ←
               </button>
@@ -124,6 +150,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
                 data-test={`rotate-${f}-clockwise`}
                 onClick={() => applyMove(f)}
                 style={{ marginLeft: 2 }}
+                disabled={busy}
               >
                 {f} →
               </button>

@@ -40,6 +40,8 @@ function RubiksCube(
   const [scrambleLength, setScrambleLength] = useState(DEFAULT_SCRAMBLE_LENGTH)
   const [errorMessage, setErrorMessage] = useState('')
   const [cubeState, setCubeState] = useState(controllerRef.current.getState())
+  const busyRef = useRef(false)
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     Cube.initSolver()
@@ -63,22 +65,37 @@ function RubiksCube(
     interval = 0
   ) => executeMoves(rendererRef.current, algorithm, interval)
 
+  const runExclusive = useCallback(async (fn: () => Promise<void> | void) => {
+    if (busyRef.current) return
+    busyRef.current = true
+    setBusy(true)
+    try {
+      await fn()
+    } finally {
+      busyRef.current = false
+      setBusy(false)
+    }
+  }, [])
+
+  const applyMoveDirect = useCallback(async (move: string) => {
+    await rendererRef.current.applyMove(move)
+    controllerRef.current.applyMove(move)
+    setCubeState(controllerRef.current.getState())
+  }, [])
+
   const applyMove = useCallback(
-    async (move: string) => {
-      await rendererRef.current.applyMove(move)
-      controllerRef.current.applyMove(move)
-      setCubeState(controllerRef.current.getState())
-    },
-    []
+    async (move: string) => runExclusive(() => applyMoveDirect(move)),
+    [runExclusive, applyMoveDirect]
   )
 
   const applyMoves = useCallback(
-    async (moves: string[]) => {
-      for (const m of moves) {
-        await applyMove(m)
-      }
-    },
-    [applyMove]
+    async (moves: string[]) =>
+      runExclusive(async () => {
+        for (const m of moves) {
+          await applyMoveDirect(m)
+        }
+      }),
+    [runExclusive, applyMoveDirect]
   )
 
   useEffect(() => {
@@ -113,47 +130,53 @@ function RubiksCube(
   }, [applyMove, applyMoves])
 
   const handleRandom = async () => {
-    try {
-      const alg = generateScramble(scrambleLength)
-      setScramble(alg)
-      await exec(alg)
-      controllerRef.current.executeMoves(alg)
-      setCubeState(controllerRef.current.getState())
-      setErrorMessage('')
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('スクランブル中にエラーが発生しました')
-    }
+    await runExclusive(async () => {
+      try {
+        const alg = generateScramble(scrambleLength)
+        setScramble(alg)
+        await exec(alg)
+        controllerRef.current.executeMoves(alg)
+        setCubeState(controllerRef.current.getState())
+        setErrorMessage('')
+      } catch (err) {
+        console.error(err)
+        setErrorMessage('スクランブル中にエラーが発生しました')
+      }
+    })
   }
 
   const handleReset = () => {
-    controllerRef.current.reset()
-    setScramble('')
-    if (sceneRef.current && groupRef.current) {
-      sceneRef.current.remove(groupRef.current)
-      rendererRef.current.dispose()
-      const newGroup = new THREE.Group()
-      sceneRef.current.add(newGroup)
-      groupRef.current = newGroup
-      rendererRef.current.setGroup(newGroup)
-    } else {
-      rendererRef.current.dispose()
-      rendererRef.current.reset()
-    }
-    setCubeState(controllerRef.current.getState())
+    runExclusive(() => {
+      controllerRef.current.reset()
+      setScramble('')
+      if (sceneRef.current && groupRef.current) {
+        sceneRef.current.remove(groupRef.current)
+        rendererRef.current.dispose()
+        const newGroup = new THREE.Group()
+        sceneRef.current.add(newGroup)
+        groupRef.current = newGroup
+        rendererRef.current.setGroup(newGroup)
+      } else {
+        rendererRef.current.dispose()
+        rendererRef.current.reset()
+      }
+      setCubeState(controllerRef.current.getState())
+    })
   }
 
   const handleSolve = async () => {
-    try {
-      const solution = controllerRef.current.solve()
-      await exec(solution, 1000)
-      controllerRef.current.executeMoves(solution)
-      setCubeState(controllerRef.current.getState())
-      setErrorMessage('')
-    } catch (err) {
-      console.error(err)
-      setErrorMessage('解法実行中にエラーが発生しました')
-    }
+    await runExclusive(async () => {
+      try {
+        const solution = controllerRef.current.solve()
+        await exec(solution, 1000)
+        controllerRef.current.executeMoves(solution)
+        setCubeState(controllerRef.current.getState())
+        setErrorMessage('')
+      } catch (err) {
+        console.error(err)
+        setErrorMessage('解法実行中にエラーが発生しました')
+      }
+    })
   }
 
   return (
@@ -166,7 +189,7 @@ function RubiksCube(
         <OrbitControls />
       </Canvas>
       <div style={{ marginTop: 10 }}>
-        <button onClick={handleReset}>再描画</button>
+        <button onClick={handleReset} disabled={busy}>再描画</button>
         <label style={{ marginLeft: 8 }}>
           手数:
           <input
@@ -177,10 +200,10 @@ function RubiksCube(
             style={{ width: 60, marginLeft: 4 }}
           />
         </label>
-        <button onClick={handleRandom} style={{ marginLeft: 8 }}>
+        <button onClick={handleRandom} style={{ marginLeft: 8 }} disabled={busy}>
           ランダム
         </button>
-        <button onClick={handleSolve} style={{ marginLeft: 8 }}>
+        <button onClick={handleSolve} style={{ marginLeft: 8 }} disabled={busy}>
           そろえる
         </button>
         <div style={{ marginTop: 8 }}>
@@ -190,6 +213,7 @@ function RubiksCube(
                 id={`rotate-${f}-counter`}
                 data-test={`rotate-${f}-counter`}
                 onClick={() => applyMove(`${f}'`)}
+                disabled={busy}
               >
                 {f} ←
               </button>
@@ -198,6 +222,7 @@ function RubiksCube(
                 data-test={`rotate-${f}-clockwise`}
                 onClick={() => applyMove(f)}
                 style={{ marginLeft: 2 }}
+                disabled={busy}
               >
                 {f} →
               </button>
