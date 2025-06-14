@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 import CubeRenderer2D from '../lib/CubeRenderer2D'
 import CubeController, { generateScramble } from '../lib/CubeController'
-import { executeMoves } from '../lib/moveExecutor'
+import { executeMoves, wait } from '../lib/moveExecutor'
 import Cube from 'cubejs'
 
 export const DEFAULT_SCRAMBLE_LENGTH = 10
@@ -17,6 +17,8 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const [scrambleLength, setScrambleLength] = useState(DEFAULT_SCRAMBLE_LENGTH)
   const [errorMessage, setErrorMessage] = useState('')
   const [cubeState, setCubeState] = useState(controllerRef.current.getState())
+  const [solutionSteps, setSolutionSteps] = useState<string[]>([])
+  const [currentStep, setCurrentStep] = useState(-1)
 
   useEffect(() => {
     Cube.initSolver()
@@ -49,6 +51,8 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
       controllerRef.current.executeMoves(alg)
       setCubeState(controllerRef.current.getState())
       setErrorMessage('')
+      setSolutionSteps([])
+      setCurrentStep(-1)
     } catch (err) {
       console.error(err)
       setErrorMessage('スクランブル中にエラーが発生しました')
@@ -60,13 +64,24 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
     rendererRef.current.reset()
     setScramble('')
     setCubeState(controllerRef.current.getState())
+    setSolutionSteps([])
+    setCurrentStep(-1)
   }
 
   const handleSolve = async () => {
     try {
       const solution = controllerRef.current.solve()
-      await exec(solution, 1000)
-      controllerRef.current.executeMoves(solution)
+      const moves = solution.split(' ').filter(Boolean)
+      setSolutionSteps(moves)
+      for (let i = 0; i < moves.length; i++) {
+        setCurrentStep(i)
+        await applyMove(moves[i])
+        if (process.env.NODE_ENV !== 'test') {
+          await wait(300)
+        }
+      }
+      setCurrentStep(-1)
+      setSolutionSteps([])
       setCubeState(controllerRef.current.getState())
       setErrorMessage('')
     } catch (err) {
@@ -129,6 +144,22 @@ B: B面を右回転 / Shift+B: B面を左回転
           </pre>
         </details>
         <div style={{ marginTop: 8 }}>スクランブル: {scramble}</div>
+        {solutionSteps.length > 0 && (
+          <div data-testid="solution-steps" style={{ marginTop: 8 }}>
+            {solutionSteps.map((s, idx) => (
+              <span
+                key={idx}
+                style={{
+                  marginRight: 4,
+                  color: idx === currentStep ? 'red' : undefined,
+                  fontWeight: idx === currentStep ? 'bold' : undefined
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
         <div data-testid="cube-state" style={{ display: 'none' }}>
           {cubeState}
         </div>

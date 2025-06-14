@@ -1,11 +1,31 @@
 import type ICubeRenderer from './ICubeRenderer'
 import Cube from 'cubejs'
+import * as THREE from 'three'
+
+interface Orientation {
+  'x+': string | null
+  'x-': string | null
+  'y+': string | null
+  'y-': string | null
+  'z+': string | null
+  'z-': string | null
+}
+
+interface Cubie {
+  position: THREE.Vector3
+  orientation: Orientation
+}
 
 export default class CubeRenderer2D implements ICubeRenderer {
   private canvas: HTMLCanvasElement | null = null
   private ctx: CanvasRenderingContext2D | null = null
   private cell = 30
   private cube = new Cube()
+  private cubies: Cubie[] = []
+
+  constructor() {
+    this.initCubies()
+  }
 
   setCanvas(el: HTMLCanvasElement | null) {
     this.canvas = el
@@ -17,6 +37,7 @@ export default class CubeRenderer2D implements ICubeRenderer {
           this.ctx = null
         }
       }
+      this.initCubies()
       this.draw()
     }
   }
@@ -30,7 +51,148 @@ export default class CubeRenderer2D implements ICubeRenderer {
     B: '#0000ff'
   }
 
-  private draw() {
+  private initCubies() {
+    const base: Orientation = {
+      'x+': 'R',
+      'x-': 'L',
+      'y+': 'U',
+      'y-': 'D',
+      'z+': 'F',
+      'z-': 'B'
+    }
+    this.cubies = []
+    for (let x = -1; x <= 1; x++) {
+      for (let y = -1; y <= 1; y++) {
+        for (let z = -1; z <= 1; z++) {
+          const ori: Orientation = {
+            'x+': x === 1 ? base['x+'] : null,
+            'x-': x === -1 ? base['x-'] : null,
+            'y+': y === 1 ? base['y+'] : null,
+            'y-': y === -1 ? base['y-'] : null,
+            'z+': z === 1 ? base['z+'] : null,
+            'z-': z === -1 ? base['z-'] : null
+          }
+          this.cubies.push({
+            position: new THREE.Vector3(x, y, z),
+            orientation: ori
+          })
+        }
+      }
+    }
+  }
+
+  private iso(x: number, y: number, z: number) {
+    const c = this.cell
+    const centerX = (this.canvas?.width || 0) / 2
+    const centerY = c * 3
+    const ang = Math.PI / 4
+    const ix = (x - z) * Math.cos(ang) * c + centerX
+    const iy = (x + z) * Math.sin(ang) * c - y * c + centerY
+    return { x: ix, y: iy }
+  }
+
+  private rotateVector(
+    v: THREE.Vector3,
+    axis: 'x' | 'y' | 'z',
+    angle: number,
+    offset = 0
+  ) {
+    const m = new THREE.Matrix4()
+    const t = new THREE.Matrix4()
+    const tInv = new THREE.Matrix4()
+    if (axis === 'x') {
+      m.makeRotationX(angle)
+      t.makeTranslation(-offset, 0, 0)
+      tInv.makeTranslation(offset, 0, 0)
+    }
+    if (axis === 'y') {
+      m.makeRotationY(angle)
+      t.makeTranslation(0, -offset, 0)
+      tInv.makeTranslation(0, offset, 0)
+    }
+    if (axis === 'z') {
+      m.makeRotationZ(angle)
+      t.makeTranslation(0, 0, -offset)
+      tInv.makeTranslation(0, 0, offset)
+    }
+    return v.clone().applyMatrix4(t).applyMatrix4(m).applyMatrix4(tInv)
+  }
+
+  private rotateOrientation(
+    cubie: Cubie,
+    axis: 'x' | 'y' | 'z',
+    angle: number
+  ) {
+    const dirs: Record<string, THREE.Vector3> = {
+      'x+': new THREE.Vector3(1, 0, 0),
+      'x-': new THREE.Vector3(-1, 0, 0),
+      'y+': new THREE.Vector3(0, 1, 0),
+      'y-': new THREE.Vector3(0, -1, 0),
+      'z+': new THREE.Vector3(0, 0, 1),
+      'z-': new THREE.Vector3(0, 0, -1)
+    }
+    const newOri: Orientation = {
+      'x+': null,
+      'x-': null,
+      'y+': null,
+      'y-': null,
+      'z+': null,
+      'z-': null
+    }
+    ;(Object.keys(dirs) as Array<keyof Orientation>).forEach((k) => {
+      const vec = this.rotateVector(dirs[k], axis, angle)
+      const key = (() => {
+        if (Math.round(vec.x) === 1) return 'x+'
+        if (Math.round(vec.x) === -1) return 'x-'
+        if (Math.round(vec.y) === 1) return 'y+'
+        if (Math.round(vec.y) === -1) return 'y-'
+        if (Math.round(vec.z) === 1) return 'z+'
+        return 'z-' as const
+      })()
+      newOri[key] = cubie.orientation[k]
+    })
+    cubie.orientation = newOri
+  }
+
+  private getTempOrientation(
+    cubie: Cubie,
+    axis: 'x' | 'y' | 'z',
+    angle: number
+  ): Orientation {
+    const dirs: Record<string, THREE.Vector3> = {
+      'x+': new THREE.Vector3(1, 0, 0),
+      'x-': new THREE.Vector3(-1, 0, 0),
+      'y+': new THREE.Vector3(0, 1, 0),
+      'y-': new THREE.Vector3(0, -1, 0),
+      'z+': new THREE.Vector3(0, 0, 1),
+      'z-': new THREE.Vector3(0, 0, -1)
+    }
+    const newOri: Orientation = {
+      'x+': null,
+      'x-': null,
+      'y+': null,
+      'y-': null,
+      'z+': null,
+      'z-': null
+    }
+    ;(Object.keys(dirs) as Array<keyof Orientation>).forEach((k) => {
+      const vec = this.rotateVector(dirs[k], axis, angle)
+      const key = (() => {
+        if (Math.round(vec.x) === 1) return 'x+'
+        if (Math.round(vec.x) === -1) return 'x-'
+        if (Math.round(vec.y) === 1) return 'y+'
+        if (Math.round(vec.y) === -1) return 'y-'
+        if (Math.round(vec.z) === 1) return 'z+'
+        return 'z-' as const
+      })()
+      newOri[key] = cubie.orientation[k]
+    })
+    return newOri
+  }
+
+  private draw(
+    rotation?: { selected: Cubie[]; axis: 'x' | 'y' | 'z'; layer: number; angle: number }
+  ) {
     if (!this.canvas) return
     const ctx = this.ctx
     const c = this.cell
@@ -38,15 +200,6 @@ export default class CubeRenderer2D implements ICubeRenderer {
     this.canvas.height = c * 8
     if (!ctx) return
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-
-    const centerX = this.canvas.width / 2
-    const centerY = c * 3
-    const iso = (x: number, y: number, z: number) => {
-      const ang = Math.PI / 4
-      const ix = (x - z) * Math.cos(ang) * c + centerX
-      const iy = (x + z) * Math.sin(ang) * c - y * c + centerY
-      return { x: ix, y: iy }
-    }
 
     const drawQuad = (pts: Array<{ x: number; y: number }>, color: string) => {
       ctx.fillStyle = color
@@ -61,68 +214,100 @@ export default class CubeRenderer2D implements ICubeRenderer {
       ctx.stroke()
     }
 
-    const state = this.cube.asString()
-    const faces = state.match(/.{9}/g)!
+    const cubies = [...this.cubies].sort(
+      (a, b) => a.position.x + a.position.y + a.position.z - (b.position.x + b.position.y + b.position.z)
+    )
 
-    // U face
-    const drawTop = () => {
-      const face = faces[0]
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          const color = this.colorMap[face[i * 3 + j] as keyof typeof this.colorMap]
-          const p1 = iso(j, 3, i)
-          const p2 = iso(j + 1, 3, i)
-          const p3 = iso(j + 1, 3, i + 1)
-          const p4 = iso(j, 3, i + 1)
-          drawQuad([p1, p2, p3, p4], color)
-        }
+    for (const cubie of cubies) {
+      let pos = cubie.position
+      let ori = cubie.orientation
+      if (rotation && rotation.selected.includes(cubie)) {
+        pos = this.rotateVector(cubie.position, rotation.axis, rotation.angle, rotation.layer)
+        ori = this.getTempOrientation(cubie, rotation.axis, rotation.angle)
+      }
+
+      const { x, y, z } = pos
+      const size = 1
+
+      if (ori['y+']) {
+        const p1 = this.iso(x, y + size, z)
+        const p2 = this.iso(x + size, y + size, z)
+        const p3 = this.iso(x + size, y + size, z + size)
+        const p4 = this.iso(x, y + size, z + size)
+        drawQuad([p1, p2, p3, p4], this.colorMap[ori['y+']])
+      }
+
+      if (ori['z+']) {
+        const p1 = this.iso(x, y + size, z + size)
+        const p2 = this.iso(x + size, y + size, z + size)
+        const p3 = this.iso(x + size, y, z + size)
+        const p4 = this.iso(x, y, z + size)
+        drawQuad([p1, p2, p3, p4], this.colorMap[ori['z+']])
+      }
+
+      if (ori['x+']) {
+        const p1 = this.iso(x + size, y + size, z)
+        const p2 = this.iso(x + size, y + size, z + size)
+        const p3 = this.iso(x + size, y, z + size)
+        const p4 = this.iso(x + size, y, z)
+        drawQuad([p1, p2, p3, p4], this.colorMap[ori['x+']])
       }
     }
-
-    // F face
-    const drawFront = () => {
-      const face = faces[2]
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          const color = this.colorMap[face[i * 3 + j] as keyof typeof this.colorMap]
-          const yTop = 3 - i
-          const yBottom = 2 - i
-          const p1 = iso(j, yTop, 3)
-          const p2 = iso(j + 1, yTop, 3)
-          const p3 = iso(j + 1, yBottom, 3)
-          const p4 = iso(j, yBottom, 3)
-          drawQuad([p1, p2, p3, p4], color)
-        }
-      }
-    }
-
-    // R face
-    const drawRight = () => {
-      const face = faces[1]
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          const color = this.colorMap[face[i * 3 + j] as keyof typeof this.colorMap]
-          const yTop = 3 - i
-          const yBottom = 2 - i
-          const zFront = 3 - j
-          const zBack = 2 - j
-          const p1 = iso(3, yTop, zFront)
-          const p2 = iso(3, yTop, zBack)
-          const p3 = iso(3, yBottom, zBack)
-          const p4 = iso(3, yBottom, zFront)
-          drawQuad([p1, p2, p3, p4], color)
-        }
-      }
-    }
-
-    drawTop()
-    drawFront()
-    drawRight()
   }
 
   async applyMove(move: string) {
-    this.cube.move(move)
-    this.draw()
+    const face = move[0] as 'U' | 'D' | 'L' | 'R' | 'F' | 'B'
+    const modifier = move.length > 1 ? move[1] : ''
+    const axisMap: Record<string, { axis: 'x' | 'y' | 'z'; layer: number; dir: 1 | -1 }> = {
+      U: { axis: 'y', layer: 1, dir: -1 },
+      D: { axis: 'y', layer: -1, dir: 1 },
+      R: { axis: 'x', layer: 1, dir: -1 },
+      L: { axis: 'x', layer: -1, dir: 1 },
+      F: { axis: 'z', layer: 1, dir: -1 },
+      B: { axis: 'z', layer: -1, dir: 1 }
+    }
+    const { axis, layer, dir } = axisMap[face]
+    let angle = (Math.PI / 2) * dir
+    if (modifier === "'") angle *= -1
+    if (modifier === '2') angle *= 2
+
+    const selected = this.cubies.filter((c) => Math.round(c.position[axis]) === layer)
+
+    if (process.env.NODE_ENV === 'test') {
+      selected.forEach((c) => {
+        const v = this.rotateVector(c.position, axis, angle, layer)
+        c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
+        this.rotateOrientation(c, axis, angle)
+      })
+      this.cube.move(move)
+      this.draw()
+      return Promise.resolve()
+    }
+
+    const duration = 300
+    const start = performance.now()
+
+    return new Promise<void>((resolve) => {
+      const animate = () => {
+        const now = performance.now()
+        const t = Math.min((now - start) / duration, 1)
+        const current = angle * t
+        this.draw({ selected, axis, layer, angle: current })
+        if (t < 1) {
+          requestAnimationFrame(animate)
+        } else {
+          selected.forEach((c) => {
+            const v = this.rotateVector(c.position, axis, angle, layer)
+            c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
+            this.rotateOrientation(c, axis, angle)
+          })
+          this.cube.move(move)
+          this.draw()
+          resolve()
+        }
+      }
+      requestAnimationFrame(animate)
+    })
   }
 
   getState(): string {
@@ -131,6 +316,7 @@ export default class CubeRenderer2D implements ICubeRenderer {
 
   reset() {
     this.cube = new Cube()
+    this.initCubies()
     this.draw()
   }
 
