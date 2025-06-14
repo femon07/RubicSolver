@@ -116,18 +116,6 @@ function RubiksCube(
     try {
       const alg = generateScramble(scrambleLength)
       setScramble(alg)
-      controllerRef.current.reset()
-      if (sceneRef.current && groupRef.current) {
-        sceneRef.current.remove(groupRef.current)
-        rendererRef.current.dispose()
-        const newGroup = new THREE.Group()
-        sceneRef.current.add(newGroup)
-        groupRef.current = newGroup
-        rendererRef.current.setGroup(newGroup)
-      } else {
-        rendererRef.current.dispose()
-        rendererRef.current.reset()
-      }
       await exec(alg)
       controllerRef.current.executeMoves(alg)
       setCubeState(controllerRef.current.getState())
