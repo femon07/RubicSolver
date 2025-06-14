@@ -22,6 +22,8 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const [solutionSteps, setSolutionSteps] = useState<string[]>([])
   const [solutionExplanations, setSolutionExplanations] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(-1)
+  const [currentAlgStep, setCurrentAlgStep] = useState(-1)
+  const [stepMoves, setStepMoves] = useState<string[][]>([])
   const [showAlgorithm, setShowAlgorithm] = useState(false)
   const busyRef = useRef(false)
   const [busy, setBusy] = useState(false)
@@ -76,7 +78,9 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
         setErrorMessage('')
         setSolutionSteps([])
         setSolutionExplanations([])
+        setStepMoves([])
         setCurrentStep(-1)
+        setCurrentAlgStep(-1)
         setShowAlgorithm(false)
       } catch (err) {
         console.error(err)
@@ -93,7 +97,9 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
       setCubeState(controllerRef.current.getState())
       setSolutionSteps([])
       setSolutionExplanations([])
+      setStepMoves([])
       setCurrentStep(-1)
+      setCurrentAlgStep(-1)
       setShowAlgorithm(false)
     })
   }
@@ -103,21 +109,29 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
       try {
         const solution = controllerRef.current.solve()
         const moves = solution.split(' ').filter(Boolean)
+        setShowAlgorithm(true)
+        const perStep = Math.ceil(moves.length / algorithmSteps.length)
+        const grouped: string[][] = []
+        for (let i = 0; i < algorithmSteps.length; i++) {
+          grouped.push(moves.slice(i * perStep, (i + 1) * perStep))
+        }
+        setStepMoves(grouped)
         setSolutionSteps(moves)
         setSolutionExplanations(generateExplanations(moves))
         for (let i = 0; i < moves.length; i++) {
           setCurrentStep(i)
+          setCurrentAlgStep(Math.min(Math.floor(i / perStep), algorithmSteps.length - 1))
           await applyMoveDirect(moves[i])
           if (process.env.NODE_ENV !== 'test') {
             await wait(300)
           }
         }
         setCurrentStep(-1)
+        setCurrentAlgStep(-1)
         setSolutionSteps([])
         setSolutionExplanations([])
         setCubeState(controllerRef.current.getState())
         setErrorMessage('')
-        setShowAlgorithm(true)
       } catch (err) {
         console.error(err)
         setErrorMessage('解法実行中にエラーが発生しました')
@@ -212,7 +226,21 @@ B: B面を右回転 / Shift+B: B面を左回転
             <div>このアプリでは次の手順でキューブをそろえます:</div>
             <ol>
               {algorithmSteps.map((s, idx) => (
-                <li key={idx}>{s}</li>
+                <li
+                  key={idx}
+                  style={{
+                    backgroundColor: idx === currentAlgStep ? '#ffeaa7' : undefined,
+                    fontWeight: idx === currentAlgStep ? 'bold' : undefined,
+                    marginBottom: 4
+                  }}
+                >
+                  <div>{idx + 1}. {s}</div>
+                  <div>
+                    {stepMoves[idx]?.map((m, mi) => (
+                      <span key={mi} style={{ marginRight: 4 }}>{m}</span>
+                    ))}
+                  </div>
+                </li>
               ))}
             </ol>
           </div>
