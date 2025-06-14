@@ -3,6 +3,7 @@ import CubeRenderer2D from '../lib/CubeRenderer2D'
 import CubeController, { generateScramble } from '../lib/CubeController'
 import { executeMoves, wait } from '../lib/moveExecutor'
 import { generateExplanations } from '../lib/solutionExplanation'
+import { getAlgorithmSteps } from '../lib/algorithmExplanation'
 import Cube from 'cubejs'
 
 export const DEFAULT_SCRAMBLE_LENGTH = 10
@@ -21,8 +22,10 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const [solutionSteps, setSolutionSteps] = useState<string[]>([])
   const [solutionExplanations, setSolutionExplanations] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(-1)
+  const [showAlgorithm, setShowAlgorithm] = useState(false)
   const busyRef = useRef(false)
   const [busy, setBusy] = useState(false)
+  const algorithmSteps = getAlgorithmSteps()
 
   useEffect(() => {
     Cube.initSolver()
@@ -74,6 +77,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
         setSolutionSteps([])
         setSolutionExplanations([])
         setCurrentStep(-1)
+        setShowAlgorithm(false)
       } catch (err) {
         console.error(err)
         setErrorMessage('スクランブル中にエラーが発生しました')
@@ -90,6 +94,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
       setSolutionSteps([])
       setSolutionExplanations([])
       setCurrentStep(-1)
+      setShowAlgorithm(false)
     })
   }
 
@@ -112,6 +117,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
         setSolutionExplanations([])
         setCubeState(controllerRef.current.getState())
         setErrorMessage('')
+        setShowAlgorithm(true)
       } catch (err) {
         console.error(err)
         setErrorMessage('解法実行中にエラーが発生しました')
@@ -201,6 +207,16 @@ B: B面を右回転 / Shift+B: B面を左回転
         <div data-testid="cube-state" style={{ display: 'none' }}>
           {cubeState}
         </div>
+        {showAlgorithm && (
+          <div data-testid="algorithm-explanation" style={{ marginTop: 8 }}>
+            <div>このアプリでは次の手順でキューブをそろえます:</div>
+            <ol>
+              {algorithmSteps.map((s, idx) => (
+                <li key={idx}>{s}</li>
+              ))}
+            </ol>
+          </div>
+        )}
         {errorMessage && <div style={{ marginTop: 8, color: 'red' }}>{errorMessage}</div>}
       </div>
     </div>
