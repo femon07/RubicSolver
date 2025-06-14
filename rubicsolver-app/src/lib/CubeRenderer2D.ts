@@ -118,6 +118,32 @@ export default class CubeRenderer2D implements ICubeRenderer {
     return v.clone().applyMatrix4(t).applyMatrix4(m).applyMatrix4(tInv)
   }
 
+  private createRotationMatrix(
+    axis: 'x' | 'y' | 'z',
+    angle: number,
+    offset = 0
+  ) {
+    const m = new THREE.Matrix4()
+    const t = new THREE.Matrix4()
+    const tInv = new THREE.Matrix4()
+    if (axis === 'x') {
+      m.makeRotationX(angle)
+      t.makeTranslation(-offset, 0, 0)
+      tInv.makeTranslation(offset, 0, 0)
+    }
+    if (axis === 'y') {
+      m.makeRotationY(angle)
+      t.makeTranslation(0, -offset, 0)
+      tInv.makeTranslation(0, offset, 0)
+    }
+    if (axis === 'z') {
+      m.makeRotationZ(angle)
+      t.makeTranslation(0, 0, -offset)
+      tInv.makeTranslation(0, 0, offset)
+    }
+    return t.clone().multiply(m).multiply(tInv)
+  }
+
   private rotateOrientation(
     cubie: Cubie,
     axis: 'x' | 'y' | 'z',
@@ -218,11 +244,15 @@ export default class CubeRenderer2D implements ICubeRenderer {
       (a, b) => a.position.x + a.position.y + a.position.z - (b.position.x + b.position.y + b.position.z)
     )
 
+    const matrix =
+      rotation &&
+      this.createRotationMatrix(rotation.axis, rotation.angle, rotation.layer)
+
     for (const cubie of cubies) {
       let pos = cubie.position
       let ori = cubie.orientation
-      if (rotation && rotation.selected.includes(cubie)) {
-        pos = this.rotateVector(cubie.position, rotation.axis, rotation.angle, rotation.layer)
+      if (matrix && rotation?.selected.includes(cubie)) {
+        pos = cubie.position.clone().applyMatrix4(matrix)
         ori = this.getTempOrientation(cubie, rotation.axis, rotation.angle)
       }
 
@@ -274,8 +304,9 @@ export default class CubeRenderer2D implements ICubeRenderer {
     const selected = this.cubies.filter((c) => Math.round(c.position[axis]) === layer)
 
     if (process.env.NODE_ENV === 'test') {
+      const mat = this.createRotationMatrix(axis, angle, layer)
       selected.forEach((c) => {
-        const v = this.rotateVector(c.position, axis, angle, layer)
+        const v = c.position.clone().applyMatrix4(mat)
         c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
         this.rotateOrientation(c, axis, angle)
       })
@@ -296,8 +327,9 @@ export default class CubeRenderer2D implements ICubeRenderer {
         if (t < 1) {
           requestAnimationFrame(animate)
         } else {
+          const mat = this.createRotationMatrix(axis, angle, layer)
           selected.forEach((c) => {
-            const v = this.rotateVector(c.position, axis, angle, layer)
+            const v = c.position.clone().applyMatrix4(mat)
             c.position.set(Math.round(v.x), Math.round(v.y), Math.round(v.z))
             this.rotateOrientation(c, axis, angle)
           })

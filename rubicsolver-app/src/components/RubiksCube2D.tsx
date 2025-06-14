@@ -45,8 +45,6 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
     try {
       const alg = generateScramble(scrambleLength)
       setScramble(alg)
-      controllerRef.current.reset()
-      rendererRef.current.reset()
       await exec(alg)
       controllerRef.current.executeMoves(alg)
       setCubeState(controllerRef.current.getState())
