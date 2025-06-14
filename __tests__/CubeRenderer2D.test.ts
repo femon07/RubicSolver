@@ -11,3 +11,11 @@ it('applyMove 後の状態がモデルと一致する', async () => {
   cube.move('U')
   expect(renderer.getState()).toBe(cube.asString())
 })
+
+it('setCanvas でキャンバスサイズが正しく設定される', () => {
+  const renderer = new CubeRenderer2D()
+  const canvas = document.createElement('canvas')
+  renderer.setCanvas(canvas)
+  expect(canvas.width).toBe(240)
+  expect(canvas.height).toBe(240)
+})
