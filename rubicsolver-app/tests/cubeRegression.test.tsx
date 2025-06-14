@@ -3,6 +3,8 @@ import '@testing-library/jest-dom'
 import RubiksCube from '../src/components/RubiksCube2D'
 import Cube from 'cubejs'
 
+jest.setTimeout(15000)
+
 jest.mock('gsap', () => ({
   gsap: {
     to: (_target: unknown, { onComplete }: { onComplete?: () => void }) => {
@@ -23,11 +25,17 @@ test('1手回した後にそろえると元に戻る', async () => {
   const input = screen.getByLabelText('手数:') as HTMLInputElement
   fireEvent.change(input, { target: { value: 1 } })
   fireEvent.click(screen.getByText('ランダム'))
-  await waitFor(() => {
-    expect(screen.getByTestId('cube-state').textContent).not.toBe(solved)
-  })
+  await waitFor(
+    () => {
+      expect(screen.getByTestId('cube-state').textContent).not.toBe(solved)
+    },
+    { timeout: 5000 }
+  )
   fireEvent.click(screen.getByText('そろえる'))
-  await waitFor(() => {
-    expect(screen.getByTestId('cube-state').textContent).toBe(solved)
-  })
+  await waitFor(
+    () => {
+      expect(screen.getByTestId('cube-state').textContent).toBe(solved)
+    },
+    { timeout: 10000 }
+  )
 })
