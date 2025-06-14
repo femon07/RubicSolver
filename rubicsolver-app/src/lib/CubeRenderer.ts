@@ -196,7 +196,7 @@ export default class CubeRenderer implements ICubeRenderer {
         params[axis] = angle
         gsap.to(rotationGroup.rotation, {
           ...params,
-          duration: 0.3,
+          duration: 0.5,
           onComplete: () => {
             rotationGroup.updateMatrixWorld()
             selected.forEach((c) => {

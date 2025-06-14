@@ -1,7 +1,10 @@
 import { useRef, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 import CubeRenderer2D from '../lib/CubeRenderer2D'
 import CubeController, { generateScramble } from '../lib/CubeController'
+import { executeMoves } from '../lib/moveExecutor'
 import Cube from 'cubejs'
+
+export const DEFAULT_SCRAMBLE_LENGTH = 10
 
 function RubiksCube2D(_props: unknown, ref: React.Ref<{
   getRendererState: () => string
@@ -11,7 +14,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const rendererRef = useRef(new CubeRenderer2D())
   const controllerRef = useRef(new CubeController())
   const [scramble, setScramble] = useState('')
-  const [scrambleLength, setScrambleLength] = useState(20)
+  const [scrambleLength, setScrambleLength] = useState(DEFAULT_SCRAMBLE_LENGTH)
   const [errorMessage, setErrorMessage] = useState('')
   const [cubeState, setCubeState] = useState(controllerRef.current.getState())
 
@@ -25,12 +28,10 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
     getControllerState: () => controllerRef.current.getState()
   }))
 
-  const executeMoves = async (algorithm: string) => {
-    const moves = algorithm.split(' ').filter(Boolean)
-    for (const move of moves) {
-      await rendererRef.current.applyMove(move)
-    }
-  }
+  const exec = async (
+    algorithm: string,
+    interval = 0
+  ) => executeMoves(rendererRef.current, algorithm, interval)
 
   const applyMove = useCallback(async (move: string) => {
     await rendererRef.current.applyMove(move)
@@ -44,7 +45,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
       setScramble(alg)
       controllerRef.current.reset()
       rendererRef.current.reset()
-      await executeMoves(alg)
+      await exec(alg)
       controllerRef.current.executeMoves(alg)
       setCubeState(controllerRef.current.getState())
       setErrorMessage('')
@@ -64,7 +65,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const handleSolve = async () => {
     try {
       const solution = controllerRef.current.solve()
-      await executeMoves(solution)
+      await exec(solution, 1000)
       controllerRef.current.executeMoves(solution)
       setCubeState(controllerRef.current.getState())
       setErrorMessage('')

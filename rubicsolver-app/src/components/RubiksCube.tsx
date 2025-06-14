@@ -11,6 +11,10 @@ import {
 import * as THREE from 'three'
 import CubeController, { generateScramble } from '../lib/CubeController'
 import CubeRenderer from '../lib/CubeRenderer'
+import { executeMoves } from '../lib/moveExecutor'
+
+export const DEFAULT_CAMERA_POSITION: [number, number, number] = [5, 4, 5]
+export const DEFAULT_SCRAMBLE_LENGTH = 10
 import Cube from 'cubejs'
 
 function SceneGrabber({ sceneRef }: { sceneRef: React.MutableRefObject<THREE.Scene | null> }) {
@@ -33,7 +37,7 @@ function RubiksCube(
   const sceneRef = useRef<THREE.Scene | null>(null)
   const groupRef = useRef<THREE.Group | null>(null)
   const [scramble, setScramble] = useState('')
-  const [scrambleLength, setScrambleLength] = useState(20)
+  const [scrambleLength, setScrambleLength] = useState(DEFAULT_SCRAMBLE_LENGTH)
   const [errorMessage, setErrorMessage] = useState('')
   const [cubeState, setCubeState] = useState(controllerRef.current.getState())
 
@@ -54,12 +58,10 @@ function RubiksCube(
     rendererRef.current.setGroup(node)
   }
 
-  const executeMoves = async (algorithm: string) => {
-    const moves = algorithm.split(' ').filter(Boolean)
-    for (const move of moves) {
-      await rendererRef.current.applyMove(move)
-    }
-  }
+  const exec = async (
+    algorithm: string,
+    interval = 0
+  ) => executeMoves(rendererRef.current, algorithm, interval)
 
   const applyMove = useCallback(
     async (move: string) => {
@@ -126,7 +128,7 @@ function RubiksCube(
         rendererRef.current.dispose()
         rendererRef.current.reset()
       }
-      await executeMoves(alg)
+      await exec(alg)
       controllerRef.current.executeMoves(alg)
       setCubeState(controllerRef.current.getState())
       setErrorMessage('')
@@ -156,7 +158,7 @@ function RubiksCube(
   const handleSolve = async () => {
     try {
       const solution = controllerRef.current.solve()
-      await executeMoves(solution)
+      await exec(solution, 1000)
       controllerRef.current.executeMoves(solution)
       setCubeState(controllerRef.current.getState())
       setErrorMessage('')
@@ -168,7 +170,7 @@ function RubiksCube(
 
   return (
     <div>
-      <Canvas camera={{ position: [5, 5, 5], fov: 40 }} style={{ height: 500, width: '100%' }}>
+      <Canvas camera={{ position: DEFAULT_CAMERA_POSITION, fov: 40 }} style={{ height: 500, width: '100%' }}>
         <SceneGrabber sceneRef={sceneRef} />
         <ambientLight />
         <pointLight position={[10, 10, 10]} />
