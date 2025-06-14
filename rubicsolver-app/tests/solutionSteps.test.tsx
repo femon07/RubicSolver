@@ -32,4 +32,6 @@ jest.mock('gsap', () => ({
   await waitFor(() => {
     expect(screen.getByTestId('solution-steps')).toBeInTheDocument()
   })
+  expect(screen.getByText('一手すすめる')).toBeInTheDocument()
+  expect(screen.getByText('自動でそろえる')).toBeInTheDocument()
 })

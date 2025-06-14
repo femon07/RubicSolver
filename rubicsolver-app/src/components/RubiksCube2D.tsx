@@ -21,6 +21,7 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
   const [solutionSteps, setSolutionSteps] = useState<string[]>([])
   const [solutionExplanations, setSolutionExplanations] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState(-1)
+  const [solveIndex, setSolveIndex] = useState(0)
   const busyRef = useRef(false)
   const [busy, setBusy] = useState(false)
 
@@ -93,29 +94,54 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
     })
   }
 
+  const finalizeSolve = () => {
+    setCurrentStep(-1)
+    setSolutionSteps([])
+    setSolutionExplanations([])
+    setSolveIndex(0)
+    setCubeState(controllerRef.current.getState())
+  }
+
   const handleSolve = async () => {
+    await runExclusive(() => {
+      const solution = controllerRef.current.solve()
+      const moves = solution.split(' ').filter(Boolean)
+      setSolutionSteps(moves)
+      setSolutionExplanations(generateExplanations(moves))
+      setCurrentStep(-1)
+      setSolveIndex(0)
+    })
+  }
+
+  const handleStep = async () => {
     await runExclusive(async () => {
-      try {
-        const solution = controllerRef.current.solve()
-        const moves = solution.split(' ').filter(Boolean)
-        setSolutionSteps(moves)
-        setSolutionExplanations(generateExplanations(moves))
-        for (let i = 0; i < moves.length; i++) {
-          setCurrentStep(i)
-          await applyMoveDirect(moves[i])
-          if (process.env.NODE_ENV !== 'test') {
-            await wait(300)
-          }
-        }
-        setCurrentStep(-1)
-        setSolutionSteps([])
-        setSolutionExplanations([])
-        setCubeState(controllerRef.current.getState())
-        setErrorMessage('')
-      } catch (err) {
-        console.error(err)
-        setErrorMessage('解法実行中にエラーが発生しました')
+      if (solveIndex >= solutionSteps.length) return
+      setCurrentStep(solveIndex)
+      await Promise.resolve()
+      await applyMoveDirect(solutionSteps[solveIndex])
+      if (process.env.NODE_ENV !== 'test') {
+        await wait(300)
       }
+      const next = solveIndex + 1
+      setSolveIndex(next)
+      setCurrentStep(-1)
+      if (next >= solutionSteps.length) {
+        finalizeSolve()
+      }
+    })
+  }
+
+  const handleAutoSolve = async () => {
+    await runExclusive(async () => {
+      for (let i = solveIndex; i < solutionSteps.length; i++) {
+        setCurrentStep(i)
+        await Promise.resolve()
+        await applyMoveDirect(solutionSteps[i])
+        if (process.env.NODE_ENV !== 'test') {
+          await wait(300)
+        }
+      }
+      finalizeSolve()
     })
   }
 
@@ -140,6 +166,20 @@ function RubiksCube2D(_props: unknown, ref: React.Ref<{
         <button onClick={handleSolve} style={{ marginLeft: 8 }} disabled={busy}>
           そろえる
         </button>
+        {solutionSteps.length > 0 && solveIndex < solutionSteps.length && (
+          <>
+            <button onClick={handleStep} style={{ marginLeft: 8 }} disabled={busy}>
+              一手すすめる
+            </button>
+            <button
+              onClick={handleAutoSolve}
+              style={{ marginLeft: 8 }}
+              disabled={busy}
+            >
+              自動でそろえる
+            </button>
+          </>
+        )}
         <div style={{ marginTop: 8 }}>
           {['U', 'D', 'L', 'R', 'F', 'B'].map((f) => (
             <span key={f} style={{ marginRight: 4 }}>

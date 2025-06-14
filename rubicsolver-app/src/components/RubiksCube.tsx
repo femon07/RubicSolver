@@ -11,7 +11,7 @@ import {
 import * as THREE from 'three'
 import CubeController, { generateScramble } from '../lib/CubeController'
 import CubeRenderer from '../lib/CubeRenderer'
-import { executeMoves } from '../lib/moveExecutor'
+import { executeMoves, wait } from '../lib/moveExecutor'
 
 export const DEFAULT_CAMERA_POSITION: [number, number, number] = [6, 5, 6]
 export const DEFAULT_SCRAMBLE_LENGTH = 10
@@ -40,6 +40,8 @@ function RubiksCube(
   const [scrambleLength, setScrambleLength] = useState(DEFAULT_SCRAMBLE_LENGTH)
   const [errorMessage, setErrorMessage] = useState('')
   const [cubeState, setCubeState] = useState(controllerRef.current.getState())
+  const [solutionSteps, setSolutionSteps] = useState<string[]>([])
+  const [solveIndex, setSolveIndex] = useState(0)
   const busyRef = useRef(false)
   const [busy, setBusy] = useState(false)
 
@@ -164,18 +166,44 @@ function RubiksCube(
     })
   }
 
+  const finalizeSolve = () => {
+    setSolutionSteps([])
+    setSolveIndex(0)
+    setCubeState(controllerRef.current.getState())
+    setErrorMessage('')
+  }
+
   const handleSolve = async () => {
+    await runExclusive(() => {
+      const solution = controllerRef.current.solve()
+      const moves = solution.split(' ').filter(Boolean)
+      setSolutionSteps(moves)
+      setSolveIndex(0)
+      setErrorMessage('')
+    })
+  }
+
+  const handleStep = async () => {
     await runExclusive(async () => {
-      try {
-        const solution = controllerRef.current.solve()
-        await exec(solution, 1000)
-        controllerRef.current.executeMoves(solution)
-        setCubeState(controllerRef.current.getState())
-        setErrorMessage('')
-      } catch (err) {
-        console.error(err)
-        setErrorMessage('解法実行中にエラーが発生しました')
+      if (solveIndex >= solutionSteps.length) return
+      await applyMoveDirect(solutionSteps[solveIndex])
+      const next = solveIndex + 1
+      setSolveIndex(next)
+      if (next >= solutionSteps.length) {
+        finalizeSolve()
       }
+    })
+  }
+
+  const handleAutoSolve = async () => {
+    await runExclusive(async () => {
+      for (let i = solveIndex; i < solutionSteps.length; i++) {
+        await applyMoveDirect(solutionSteps[i])
+        if (process.env.NODE_ENV !== 'test') {
+          await wait(1000)
+        }
+      }
+      finalizeSolve()
     })
   }
 
@@ -206,6 +234,20 @@ function RubiksCube(
         <button onClick={handleSolve} style={{ marginLeft: 8 }} disabled={busy}>
           そろえる
         </button>
+        {solutionSteps.length > 0 && solveIndex < solutionSteps.length && (
+          <>
+            <button onClick={handleStep} style={{ marginLeft: 8 }} disabled={busy}>
+              一手すすめる
+            </button>
+            <button
+              onClick={handleAutoSolve}
+              style={{ marginLeft: 8 }}
+              disabled={busy}
+            >
+              自動でそろえる
+            </button>
+          </>
+        )}
         <div style={{ marginTop: 8 }}>
           {['U', 'D', 'L', 'R', 'F', 'B'].map((f) => (
             <span key={f} style={{ marginRight: 4 }}>

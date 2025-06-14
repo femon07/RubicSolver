@@ -32,6 +32,10 @@ test('1手回した後にそろえると元に戻る', async () => {
     { timeout: 5000 }
   )
   fireEvent.click(screen.getByText('そろえる'))
+  await waitFor(() => {
+    expect(screen.getByText('自動でそろえる')).toBeInTheDocument()
+  })
+  fireEvent.click(screen.getByText('自動でそろえる'))
   await waitFor(
     () => {
       expect(screen.getByTestId('cube-state').textContent).toBe(solved)
