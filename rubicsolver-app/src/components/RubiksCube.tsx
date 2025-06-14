@@ -13,7 +13,7 @@ import CubeController, { generateScramble } from '../lib/CubeController'
 import CubeRenderer from '../lib/CubeRenderer'
 import { executeMoves } from '../lib/moveExecutor'
 
-export const DEFAULT_CAMERA_POSITION: [number, number, number] = [5, 4, 5]
+export const DEFAULT_CAMERA_POSITION: [number, number, number] = [6, 5, 6]
 export const DEFAULT_SCRAMBLE_LENGTH = 10
 import Cube from 'cubejs'
 
@@ -181,7 +181,7 @@ function RubiksCube(
 
   return (
     <div>
-      <Canvas camera={{ position: DEFAULT_CAMERA_POSITION, fov: 40 }} style={{ height: 500, width: '100%' }}>
+      <Canvas camera={{ position: DEFAULT_CAMERA_POSITION, fov: 40 }} style={{ height: 600, width: '100%' }}>
         <SceneGrabber sceneRef={sceneRef} />
         <ambientLight />
         <pointLight position={[10, 10, 10]} />

@@ -15,5 +15,5 @@ test('3D版のデフォルト手数定数が10である', () => {
 })
 
 test('カメラ位置定数が期待通り', () => {
-  expect(DEFAULT_CAMERA_POSITION).toEqual([5, 4, 5])
+  expect(DEFAULT_CAMERA_POSITION).toEqual([6, 5, 6])
 })
